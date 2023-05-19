@@ -1,16 +1,28 @@
-# This is a sample Python script.
+import pygame
+from menu.Menu import Menu
+from pygame.locals import *
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+menu = Menu(1280, 720)
 
+# temporary game loop
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+pygame.init()
 
+clock = pygame.time.Clock()
+fps = 120
+running = True
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+menu.createWindowMenu()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+while running:
+
+    menu.printWindowMenu()
+    clock.tick(fps)
+
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            running = False
+
+    pygame.display.update()
+
+pygame.quit()
