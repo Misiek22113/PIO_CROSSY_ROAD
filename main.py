@@ -23,6 +23,8 @@ while running:
         if event.type == QUIT:
             running = False
 
+    menu.handle_menu_loop()
+
     pygame.display.update()
 
 pygame.quit()
