@@ -2,7 +2,6 @@ import pygame, sys
 from pygame.locals import *
 from menu.button.Button import Button
 from menu.window.window import Window
-from menu.controls.Controls import Controls
 
 
 class Menu(Window):
@@ -16,7 +15,6 @@ class Menu(Window):
         super().__init__(name, width, height)
         self.width = width
         self.height = height
-        self.handle_menu_loop()
 
     def print_window_menu(self):
         self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
@@ -46,9 +44,9 @@ class Menu(Window):
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.PLAY_BUTTON.check_for_input(MENU_MOUSE_POS):
-                        print("play")
+                        return "play"
                     if self.CONTROLS_BUTTON.check_for_input(MENU_MOUSE_POS):
-                        Controls(self.width, self.height).handle_controls_loop()
+                        return "controls"
                     if self.EXIT_BUTTON.check_for_input(MENU_MOUSE_POS):
                         pygame.quit()
                         sys.exit()
