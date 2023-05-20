@@ -19,7 +19,7 @@ class Button:
             screen.blit(self.image, self.rect)
         screen.blit(self.text, self.text_rect)
 
-    def check_form_input(self, position):
+    def check_for_input(self, position):
         if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
                                                                                           self.rect.bottom):
             return True
