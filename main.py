@@ -12,11 +12,11 @@ clock = pygame.time.Clock()
 fps = 120
 running = True
 
-menu.createWindowMenu()
+menu.create_window_menu()
 
 while running:
 
-    menu.printWindowMenu()
+    menu.print_window_menu()
     clock.tick(fps)
 
     for event in pygame.event.get():
