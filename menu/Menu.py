@@ -1,41 +1,39 @@
-import pygame, sys
-from pygame.locals import *
+import pygame
+import sys
 from menu.button.Button import Button
 from menu.window.window import Window
 
 
 class Menu(Window):
 
-    window = {}
-    PLAY_BUTTON = {}
-    CONTROLS_BUTTON = {}
-    EXIT_BUTTON = {}
-
     def __init__(self, width, height, name="Menu"):
         super().__init__(name, width, height)
         self.width = width
         self.height = height
+        self.PLAY_BUTTON = None
+        self.CONTROLS_BUTTON = None
+        self.EXIT_BUTTON = None
+        self.MENU_MOUSE_POS = None
 
     def print_window_menu(self):
         self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
         self.draw_text("PASS THE EXAM", 640, 100, self.FONT_HEADER, self.TEXT_COLOR)
-        self.PLAY_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 250), text_input="PLAY", font=self.FONT_OPTION,
+        self.PLAY_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 350), text_input="PLAY", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
-        self.CONTROLS_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 400), text_input="CONTROLS",
+        self.CONTROLS_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 500), text_input="CONTROLS",
                                       font=self.FONT_OPTION,
                                       base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
-        self.EXIT_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 550), text_input="EXIT", font=self.FONT_OPTION,
+        self.EXIT_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 650), text_input="EXIT", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
 
     def handle_menu_loop(self):
-
         while True:
-            MENU_MOUSE_POS = pygame.mouse.get_pos()
-
             self.print_window_menu()
 
+            self.MENU_MOUSE_POS = pygame.mouse.get_pos()
+
             for button in [self.PLAY_BUTTON, self.CONTROLS_BUTTON, self.EXIT_BUTTON]:
-                button.change_color(MENU_MOUSE_POS)
+                button.change_color(self.MENU_MOUSE_POS)
                 button.update(self.screen)
 
             for event in pygame.event.get():
@@ -43,11 +41,11 @@ class Menu(Window):
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.PLAY_BUTTON.check_for_input(MENU_MOUSE_POS):
+                    if self.PLAY_BUTTON.check_for_input(self.MENU_MOUSE_POS):
                         return "play"
-                    if self.CONTROLS_BUTTON.check_for_input(MENU_MOUSE_POS):
+                    if self.CONTROLS_BUTTON.check_for_input(self.MENU_MOUSE_POS):
                         return "controls"
-                    if self.EXIT_BUTTON.check_for_input(MENU_MOUSE_POS):
+                    if self.EXIT_BUTTON.check_for_input(self.MENU_MOUSE_POS):
                         pygame.quit()
                         sys.exit()
 

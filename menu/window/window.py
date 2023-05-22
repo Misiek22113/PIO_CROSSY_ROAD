@@ -5,9 +5,6 @@ pygame.font.init()
 
 class Window:
 
-    height = 0
-    width = 0
-    screen = None
     BACKGROUND_IMAGE = pygame.image.load("menu/menu_background.png")
     MENU_BUTTON = pygame.image.load("menu/button_menu.png")
     TEXT_COLOR = (228, 36, 48)
@@ -15,6 +12,7 @@ class Window:
     HOVERING_COLOR = (230, 205, 87)
     FONT_HEADER = pygame.font.Font("menu/PressStart2P-Regular.ttf", 80)
     FONT_OPTION = pygame.font.Font("menu/PressStart2P-Regular.ttf", 40)
+    FONT_CHAMPION_SELECT = pygame.font.Font("menu/PressStart2P-Regular.ttf", 60)
 
     def __init__(self, name, width, height):
         self.height = height
