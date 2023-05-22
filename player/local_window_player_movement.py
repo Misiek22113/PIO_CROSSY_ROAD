@@ -1,5 +1,7 @@
 import pygame
 
+from player import *
+
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 
@@ -27,14 +29,11 @@ class LocalWindowPlayerMovement:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.is_running = False
 
 
 local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 while local_window.is_running:
-
     local_window.tick()
     local_window.draw_background()
     local_window.handle_events()
