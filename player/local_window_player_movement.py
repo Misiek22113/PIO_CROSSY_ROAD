@@ -26,6 +26,26 @@ class LocalWindowPlayerMovement:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
+                
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    player.moving_left = True
+                if event.key == pygame.K_d:
+                    player.moving_right = True
+                if event.key == pygame.K_s:
+                    player.moving_down = True
+                if event.key == pygame.K_w:
+                    player.moving_up = True
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a:
+                    player.moving_left = False
+                if event.key == pygame.K_d:
+                    player.moving_right = False
+                if event.key == pygame.K_s:
+                    player.moving_down = False
+                if event.key == pygame.K_w:
+                    player.moving_up = False
 
 
 local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -38,6 +58,7 @@ while local_window.is_running:
     local_window.draw_background()
     local_window.handle_events()
 
+    player.move()
     player.print_player(local_window)
 
     pygame.display.update()
