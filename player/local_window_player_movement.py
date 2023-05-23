@@ -1,9 +1,8 @@
 import pygame
 
-from player import *
-
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
+BG_COLOR = (144, 201, 120)
 
 FPS = 60
 
@@ -16,7 +15,7 @@ class LocalWindowPlayerMovement:
         self.height = height
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.clock = pygame.time.Clock()
-        self.background_color = (144, 201, 120)
+        self.background_color = BG_COLOR
         self.is_running = True
 
     def draw_background(self):
@@ -36,4 +35,5 @@ while local_window.is_running:
     local_window.handle_events()
     pygame.display.update()
 
+    # TODO remember to delete this when real main window will be implemented
 pygame.quit()
