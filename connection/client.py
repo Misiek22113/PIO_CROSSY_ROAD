@@ -23,6 +23,7 @@ class Client:
         self.server_port = server_port
         self.map = Game()
         self.server_socket = None
+        self.close = False
 
     def start_connection(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -39,6 +40,10 @@ class Client:
 
     def get_map(self):
         while True:
+            if self.close:
+                self.server_socket.close()
+                sys.exit()
+
             positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
 
             for player_number, position in enumerate(positions):
@@ -52,6 +57,10 @@ class Client:
         while True:
             move = input()
             self.server_socket.sendall(move.encode())
+
+            if move == "q":
+                self.close = True
+                sys.exit()
 
 
 client = Client(HOST_IP, HOST_PORT)

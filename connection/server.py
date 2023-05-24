@@ -3,12 +3,13 @@ import socket
 import sys
 import time
 import threading
+import numpy as np
 
 from game_simulation.game import Game
 
 ROUND_TIME = 1
 
-IP = '127.0.0.1'
+IP = "127.0.0.1"
 PORT = 6000
 
 MOVE_SIZE = 34
@@ -30,6 +31,7 @@ class Server:
         self.number_of_connections = INIT_VALUE_NUMBER_OF_CONNECTIONS
         self.lock = threading.Lock()
         self.round_lock = [threading.Semaphore(INIT_VALUE_SEMAPHORE) for _ in range(MAX_PLAYERS)]
+        self.close_connection = np.array([False for _ in range(MAX_PLAYERS)])
 
     def start_connection(self):
         for x in range(MAX_PLAYERS+NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
@@ -69,6 +71,12 @@ class Server:
             move = self.client_sockets[client_number].recv(MOVE_SIZE).decode()
             print("move: " + move)
             self.lock.acquire()
+            if move == 'q':
+                self.close_connection[client_number] = True
+                self.lock.release()
+                print("BYEEEEEE  " + str(client_number+1))
+                sys.exit()
+
             self.game.make_move(client_number, move)
             self.lock.release()
 
@@ -78,7 +86,14 @@ class Server:
         while True:
             self.lock.acquire()
             print(sys.getsizeof(self.game.get_positions()))
+
             self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
+
+            if self.close_connection[client_number]:
+                self.client_sockets[client_number].close()
+                self.lock.release()
+                sys.exit()
+
             self.lock.release()
             self.round_lock[client_number].acquire()
 
