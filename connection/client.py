@@ -3,6 +3,7 @@ import socket
 import sys
 import threading
 import pickle
+from io import StringIO
 
 from game_simulation.game import Game
 
@@ -46,6 +47,12 @@ class Client:
 
             positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
 
+            if positions is None:
+                self.close = True
+                self.server_socket.close()
+                print("Server is closed. Click anything to close program.")
+                sys.exit()
+
             for player_number, position in enumerate(positions):
                 self.map.actual_position(player_number, position)
 
@@ -56,6 +63,10 @@ class Client:
     def get_move(self):
         while True:
             move = input()
+
+            if self.close:
+                sys.exit()
+
             self.server_socket.sendall(move.encode())
 
             if move == "q":

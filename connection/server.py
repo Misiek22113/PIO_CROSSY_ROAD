@@ -32,9 +32,13 @@ class Server:
         self.lock = threading.Lock()
         self.round_lock = [threading.Semaphore(INIT_VALUE_SEMAPHORE) for _ in range(MAX_PLAYERS)]
         self.close_connection = np.array([False for _ in range(MAX_PLAYERS)])
+        self.close = False
+        self.client_threads = []
 
     def start_connection(self):
-        for x in range(MAX_PLAYERS+NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
+        threading.Thread(target=self.server_command).start()
+
+        for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
             threading.Thread(target=self.connect_client).start()
 
         already_connected = 0
@@ -42,15 +46,30 @@ class Server:
 
         while True:
             if self.number_of_connections > already_connected:
-                threading.Thread(target=self.handle_move, args=[already_connected]).start()
-                threading.Thread(target=self.send_position, args=[already_connected]).start()
+                self.client_threads.append([threading.Thread(target=self.handle_move, args=[already_connected]),
+                                            threading.Thread(target=self.send_position, args=[already_connected])])
+                for thread in self.client_threads[already_connected]:
+                    thread.start()
+
                 already_connected += 1
-            elif self.number_of_connections == MAX_PLAYERS:
+
+            if self.close:
                 break
+
+        for group_of_threads in self.client_threads:
+            for thread in group_of_threads:
+                while thread.is_alive():
+                    continue
+
+        self.server_socket.close()
 
     def connect_client(self):
         while True:
-            client_socket_to_check, _ = self.server_socket.accept()
+            try:
+                client_socket_to_check, _ = self.server_socket.accept()
+            except OSError:
+                sys.exit()
+
             self.lock.acquire()
             if self.number_of_connections == 3:
                 client_socket_to_check.send(b"NO")
@@ -74,7 +93,11 @@ class Server:
             if move == 'q':
                 self.close_connection[client_number] = True
                 self.lock.release()
-                print("BYEEEEEE  " + str(client_number+1))
+                print("BYEEEEEE  " + str(client_number + 1))
+                sys.exit()
+
+            if self.close:
+                self.lock.release()
                 sys.exit()
 
             self.game.make_move(client_number, move)
@@ -86,6 +109,12 @@ class Server:
         while True:
             self.lock.acquire()
             print(sys.getsizeof(self.game.get_positions()))
+
+            if self.close:
+                self.client_sockets[client_number].send(pickle.dumps(None))
+                self.client_sockets[client_number].close()
+                self.lock.release()
+                sys.exit()
 
             self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
 
@@ -102,6 +131,16 @@ class Server:
             time.sleep(ROUND_TIME)
             for locking in self.round_lock:
                 locking.release()
+
+            if self.close:
+                sys.exit()
+
+    def server_command(self):
+        while True:
+            command = input()
+            if command == "q":
+                self.close = True
+                sys.exit()
 
 
 server = Server(IP, PORT)
