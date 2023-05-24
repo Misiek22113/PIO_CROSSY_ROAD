@@ -33,7 +33,11 @@ class Server:
         self.round_lock = [threading.Semaphore(INIT_VALUE_SEMAPHORE) for _ in range(MAX_PLAYERS)]
         self.close_connection = np.array([False for _ in range(MAX_PLAYERS)])
         self.close = False
-        self.client_threads = []
+        self.client_threads = [None for _ in range(MAX_PLAYERS)]
+        self.active_connections = MAX_PLAYERS
+        self.place = [0, 0, 0]
+        self.new = [0, 0, 0]
+        self.already_connected = 0
 
     def start_connection(self):
         threading.Thread(target=self.server_command).start()
@@ -41,17 +45,26 @@ class Server:
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
             threading.Thread(target=self.connect_client).start()
 
-        already_connected = 0
         threading.Thread(target=self.round_timer).start()
 
         while True:
-            if self.number_of_connections > already_connected:
-                self.client_threads.append([threading.Thread(target=self.handle_move, args=[already_connected]),
-                                            threading.Thread(target=self.send_position, args=[already_connected])])
-                for thread in self.client_threads[already_connected]:
-                    thread.start()
+            if self.number_of_connections > self.already_connected:
+                for x, value in enumerate(self.new):
+                    if value == 1:
+                        self.client_threads[x] = [threading.Thread(target=self.handle_move, args=[x]),
+                                            threading.Thread(target=self.send_position, args=[x])]
 
-                already_connected += 1
+                        for thread in self.client_threads[x]:
+                            thread.start()
+
+                        self.already_connected += 1
+                        self.new[x] = 0
+                        break
+
+            if self.active_connections != MAX_PLAYERS:
+                for x in range(MAX_PLAYERS - self.active_connections):
+                    threading.Thread(target=self.connect_client).start()
+                self.active_connections = MAX_PLAYERS
 
             if self.close:
                 break
@@ -71,15 +84,22 @@ class Server:
                 sys.exit()
 
             self.lock.acquire()
-            if self.number_of_connections == 3:
+            if self.number_of_connections == MAX_PLAYERS:
                 client_socket_to_check.send(b"NO")
                 client_socket_to_check.close()
                 self.lock.release()
                 continue
             else:
-                client_number = self.number_of_connections
+                for number, value in enumerate(self.place):
+                    if value == 0:
+                        client_number = number
+                        print(number)
+                        break
+
                 self.client_sockets[client_number] = client_socket_to_check
-                self.game.add_player(self.number_of_connections)
+                self.place[client_number] = 1
+                self.new[client_number] = 1
+                self.game.add_player(client_number)
                 self.number_of_connections += 1
                 self.lock.release()
                 self.client_sockets[client_number].sendall(b"OK")
@@ -92,13 +112,18 @@ class Server:
             self.lock.acquire()
             if move == 'q':
                 self.close_connection[client_number] = True
-                self.lock.release()
+                self.place[client_number] = 0
                 print("BYEEEEEE  " + str(client_number + 1))
+                self.game.delete_player(client_number)
+                self.active_connections -= 1
+                self.number_of_connections -= 1
+                self.already_connected -= 1
+                self.lock.release()
                 sys.exit()
 
             if self.close:
-                self.lock.release()
                 self.client_sockets[client_number].close()
+                self.lock.release()
                 sys.exit()
 
             self.game.make_move(client_number, move)
@@ -120,6 +145,7 @@ class Server:
 
             if self.close_connection[client_number]:
                 self.client_sockets[client_number].close()
+                self.close_connection[client_number] = False
                 self.lock.release()
                 sys.exit()
 

@@ -30,7 +30,7 @@ class Client:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.connect((self.server_ip, self.server_port))
         message = self.server_socket.recv(SIZE_OF_CONNECT_MESSAGE).decode()
-
+        print("leggo")
         if message == DISCONNECT_MESSAGE:
             self.server_socket.close()
             sys.exit(EXIT)

@@ -99,6 +99,9 @@ class Game:
                 return
             self.map[position[0], position[1]] = player + 1
             self.player_positions[player] = position
+        elif position[0] == -1:
+            self.map[self.player_positions[player][0], self.player_positions[player][1]] = 0
+            self.player_positions[player] = position
         else:
             self.map[self.player_positions[player][0], self.player_positions[player][1]] = 0
             self.map[position[0], position[1]] = player + 1
@@ -107,5 +110,9 @@ class Game:
     def get_positions(self):
         return self.player_positions
 
+    def delete_player(self, player):
+        self.map[self.player_positions[player][0], self.player_positions[player][1]] = 0
+        self.player_positions[player] = [-1, -1]
+        self.player_numbers = np.delete(self.player_numbers, player)
 
 game = Game()
