@@ -48,6 +48,7 @@ class Client:
             positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
 
             if positions is None:
+                self.server_socket.sendall(b"c")
                 self.close = True
                 self.server_socket.close()
                 print("Server is closed. Click anything to close program.")

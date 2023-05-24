@@ -98,6 +98,7 @@ class Server:
 
             if self.close:
                 self.lock.release()
+                self.client_sockets[client_number].close()
                 sys.exit()
 
             self.game.make_move(client_number, move)
@@ -112,7 +113,6 @@ class Server:
 
             if self.close:
                 self.client_sockets[client_number].send(pickle.dumps(None))
-                self.client_sockets[client_number].close()
                 self.lock.release()
                 sys.exit()
 
