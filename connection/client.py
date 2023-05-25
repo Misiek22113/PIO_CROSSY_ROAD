@@ -3,7 +3,6 @@ import socket
 import sys
 import threading
 import pickle
-from io import StringIO
 
 from game_simulation.game import Game
 
