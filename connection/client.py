@@ -7,50 +7,64 @@ from io import StringIO
 
 from game_simulation.game import Game
 
+QUIT = "q"
+CLOSE_SIGNAL = None
+
+SERVER_IS_NOT_CONNECT = None
+
+CLIENT_IS_RUNNING = False
+CLIENT_IS_CLOSING = True
+
 HOST_IP = "127.0.0.1"
 HOST_PORT = 6000
 
 SIZE_OF_CONNECT_MESSAGE = 40
-SIZE_OF_RECV_WITH_POSITIONS = 2000
+SIZE_OF_RECV_WITH_POSITIONS = 1000
 
 DISCONNECT_MESSAGE = "NO"
-EXIT = 0
+CLOSING_MESSAGE = b"c"
 
 
 class Client:
 
-    def __init__(self, server_ip, server_port):
-        self.server_ip = server_ip
-        self.server_port = server_port
+    def __init__(self):
+        self.server_ip = HOST_IP
+        self.server_port = HOST_PORT
         self.map = Game()
-        self.server_socket = None
-        self.close = False
+        self.server_socket = SERVER_IS_NOT_CONNECT
+        self.client_status = CLIENT_IS_RUNNING
 
     def start_connection(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.connect((self.server_ip, self.server_port))
-        message = self.server_socket.recv(SIZE_OF_CONNECT_MESSAGE).decode()
-        print("leggo")
-        if message == DISCONNECT_MESSAGE:
+
+        try:
+            self.server_socket.connect((self.server_ip, self.server_port))
+        except ConnectionRefusedError:
+            print("Server is offline.")
+            sys.exit()
+
+        connection_message = self.server_socket.recv(SIZE_OF_CONNECT_MESSAGE).decode()
+
+        if connection_message == DISCONNECT_MESSAGE:
+            print("Server is full.")
             self.server_socket.close()
-            sys.exit(EXIT)
+            sys.exit()
 
     def start_game(self):
-        threading.Thread(target=self.get_move).start()
-        threading.Thread(target=self.get_map).start()
+        threading.Thread(target=self.receive_move).start()
+        threading.Thread(target=self.receive_players_positions).start()
 
-    def get_map(self):
+    def receive_players_positions(self):
         while True:
-            if self.close:
+            if self.client_status == CLIENT_IS_CLOSING:
                 self.server_socket.close()
                 sys.exit()
 
             positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
 
-            if positions is None:
-                self.server_socket.sendall(b"c")
-                self.close = True
-                self.server_socket.close()
+            if positions == CLOSE_SIGNAL:
+                self.server_socket.sendall(CLOSING_MESSAGE)
+                self.client_status = CLIENT_IS_CLOSING
                 print("Server is closed. Click anything to close program.")
                 sys.exit()
 
@@ -61,20 +75,22 @@ class Client:
             print(self.map)
             print("Move: ")
 
-    def get_move(self):
+    def receive_move(self):
         while True:
             move = input()
 
-            if self.close:
+            if self.client_status == CLIENT_IS_CLOSING:
+                self.server_socket.close()
                 sys.exit()
 
             self.server_socket.sendall(move.encode())
 
-            if move == "q":
-                self.close = True
+            if move == QUIT:
+                self.client_status = CLIENT_IS_CLOSING
                 sys.exit()
 
 
-client = Client(HOST_IP, HOST_PORT)
+# TODO delete later
+client = Client()
 client.start_connection()
 client.start_game()

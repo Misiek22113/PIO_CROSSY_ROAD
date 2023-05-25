@@ -2,6 +2,8 @@ import random
 
 import numpy as np
 
+# TODO that is only game simulation - delete later, so it is not refactored. Please, don't read
+
 
 class Game:
 
