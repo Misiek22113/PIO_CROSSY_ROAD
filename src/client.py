@@ -3,6 +3,7 @@ import socket
 import sys
 import threading
 import pickle
+import time
 
 import pygame
 
@@ -56,7 +57,7 @@ class Client:
             self.local_window.draw_background()
             self.local_window.handle_events(self.move)
 
-            self.player.move(self.move)
+            # self.player.move(self.move)
             self.player.print_player(self.local_window)
 
             pygame.display.update()
@@ -83,51 +84,14 @@ class Client:
 
     def start_game(self):
         threading.Thread(target=self.receive_move).start()
-        threading.Thread(target=self.receive_players_positions).start()
-
-    def receive_players_positions(self):
-        while True:
-            # if self.client_status == CLIENT_IS_CLOSING:
-            #     self.server_socket.close()
-            #     sys.exit()
-            #
-            # try:
-            #     positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
-            # except ConnectionResetError:
-            #     positions = CLOSE_SIGNAL_ERROR
-            #
-            # if positions == CLOSE_SIGNAL or positions == CLOSE_SIGNAL_ERROR:
-            #     if position == CLOSE_SIGNAL:
-            #         self.server_socket.sendall(CLOSING_MESSAGE)
-            #     self.client_status = CLIENT_IS_CLOSING
-            #     print("Server is closed. Click anything to close program.")
-            #     sys.exit()
-            #
-            # for player_number, position in enumerate(positions):
-            #     self.map.actual_position(player_number, position)
-            continue
-            # os.system("cls")
-            # print(self.map)
-            # print("Move: ")
 
     def receive_move(self):
         while True:
-            if self.client_status == CLIENT_IS_CLOSING:
-                self.server_socket.close()
-                sys.exit()
-
-            print("co")
-            move = 'tak'
-
-            try:
-                self.server_socket.sendall(pickle.dumps(self.move))
-            except ConnectionResetError:
-                move = QUIT
-
-            if move == QUIT:
-                self.client_status = CLIENT_IS_CLOSING
-                sys.exit()
-
+            tak = time.time()
+            positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
+            self.server_socket.sendall(pickle.dumps(self.move))
+            self.player.set_xy(positions[0], positions[1])
+            print(tak - time.time())
 
 # TODO delete later
 client = Client()
