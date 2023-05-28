@@ -8,6 +8,7 @@ import pygame
 
 from game_simulation.game import Game
 from player.local_window_player_movement import LocalWindowPlayerMovement, FPS, SCREEN_WIDTH, SCREEN_HEIGHT
+from player.player import create_player
 
 NEW_CONNECTION = 1
 
@@ -29,7 +30,7 @@ NEW_GAME = 1
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 6000
-SIZE_OF_CLIENT_MESSAGE = 34
+SIZE_OF_CLIENT_MESSAGE = 300
 
 NUMBER_OF_THREADS_TO_CANCEL_CONNECTION = 1
 NUMBER_OF_STARTED_CONNECTIONS_INIT_VALUE = 0
@@ -52,8 +53,6 @@ EMPTY_PLACE_FOR_SOCKET = None
 class Server:
 
     def __init__(self):
-        pygame.init()
-
         # server's variables
         self.ip = SERVER_IP
         self.port = SERVER_PORT
@@ -78,23 +77,7 @@ class Server:
         self.game = Game()
         self.game_lock = threading.Lock()
         self.start_round = [threading.Semaphore(SEMAPHORE_INIT_VALUE) for _ in range(MAX_PLAYERS)]
-        self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT)
-
-    def start_server(self):
-        threading.Thread(target=self.start_connection)
-
-        while self.local_window.is_running:
-            self.local_window.clock.tick(FPS)
-            self.local_window.draw_background()
-            self.local_window.handle_events()
-
-            # player.move()
-            # player.print_player(local_window)
-
-            pygame.display.update()
-
-            # TODO remember to delete this when real main window will be implemented
-        pygame.quit()
+        self.player = [create_player(100, 100, "spiderman")]
 
     def start_connection(self):
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
@@ -157,6 +140,7 @@ class Server:
                 client_new_connection.send(SERVER_IS_FULL)
                 client_new_connection.close()
             else:
+                print("hey")
                 for number, status in enumerate(self.client_number):
                     if status == FREE:
                         client_number = number
@@ -174,11 +158,9 @@ class Server:
     def handle_client_move(self, client_number):
         while True:
             try:
-                move = self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE).decode()
+                move = pickle.loads(self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE))
             except ConnectionResetError:
                 move = QUIT
-
-            self.game_lock.acquire()
 
             if move == QUIT:
                 self.client_status[client_number] = CLIENT_IS_CLOSING
@@ -187,43 +169,38 @@ class Server:
                 self.connections_needed_to_start += CLOSED_CONNECTION
                 self.number_of_started_connections -= CLOSED_CONNECTION
                 self.number_of_started_games -= GAME_IS_ENDED
-                self.game_lock.release()
                 sys.exit()
 
             if self.server_status == SERVER_IS_CLOSING:
                 self.client_sockets[client_number].close()
-                self.game_lock.release()
                 sys.exit()
 
-            self.game.make_move(client_number, move)
-            self.game_lock.release()
-
-            self.start_round[client_number].acquire()
+            print(move)
+            # self.game.make_move(client_number, move)
 
     def send_position_to_client(self, client_number):
         while True:
-            self.game_lock.acquire()
-            if self.server_status == SERVER_IS_CLOSING:
-                self.client_sockets[client_number].send(pickle.dumps(CLOSE_SIGNAL))
-                self.game_lock.release()
-                sys.exit()
-
-            try:
-                self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
-            except ConnectionResetError:
-                self.client_status[client_number] = CLIENT_IS_CLOSING
-
-            if self.client_status[client_number] == CLIENT_IS_CLOSING:
-                self.client_sockets[client_number].close()
-                self.game_lock.release()
-                sys.exit()
-
-            self.game_lock.release()
+            # self.game_lock.acquire()
+            # if self.server_status == SERVER_IS_CLOSING:
+            #     #self.client_sockets[client_number].send(pickle.dumps(CLOSE_SIGNAL))
+            #     self.game_lock.release()
+            #     sys.exit()
+            #
+            # try:
+            #     self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
+            # except ConnectionResetError:
+            #     self.client_status[client_number] = CLIENT_IS_CLOSING
+            #
+            # if self.client_status[client_number] == CLIENT_IS_CLOSING:
+            #     self.client_sockets[client_number].close()
+            #     self.game_lock.release()
+            #     sys.exit()
+            #
+            # self.game_lock.release()
             self.start_round[client_number].acquire()
 
     def round_timer(self):
         while True:
-            time.sleep(ROUND_TIME)
             for start_round in self.start_round:
                 start_round.release()
 
@@ -240,4 +217,4 @@ class Server:
 
 # TODO delete later
 server = Server()
-server.start_server()
+server.start_connection()
