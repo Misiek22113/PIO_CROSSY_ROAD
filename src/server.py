@@ -30,7 +30,7 @@ NEW_GAME = 1
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 6000
-SIZE_OF_CLIENT_MESSAGE = 300
+SIZE_OF_CLIENT_MESSAGE = 200
 
 NUMBER_OF_THREADS_TO_CANCEL_CONNECTION = 1
 NUMBER_OF_STARTED_CONNECTIONS_INIT_VALUE = 0
@@ -46,7 +46,7 @@ BUSY = False
 GAME_NOT_TO_START = False
 GAME_TO_START = True
 
-EMPTY_PLACE_FOR_THREADS = np.array([None, None])
+EMPTY_PLACE_FOR_THREADS = np.array([None])
 EMPTY_PLACE_FOR_SOCKET = None
 
 
@@ -83,8 +83,6 @@ class Server:
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
             threading.Thread(target=self.connect_client).start()
 
-        threading.Thread(target=self.round_timer).start()
-
         while True:
             self.start_games()
             self.open_new_connections()
@@ -115,8 +113,7 @@ class Server:
             for player_number, status_of_game in enumerate(self.game_to_start):
                 if status_of_game == GAME_TO_START:
                     self.client_threads[player_number] = np.array(
-                        [threading.Thread(target=self.handle_client_move, args=[player_number]),
-                         threading.Thread(target=self.send_position_to_client, args=[player_number])])
+                        [threading.Thread(target=self.send_position_to_client, args=[player_number])])
 
                     for thread in self.client_threads[player_number]:
                         thread.start()
@@ -155,56 +152,25 @@ class Server:
                 self.client_sockets[client_number].sendall(CONNECTION_IS_SUCCESSFUL)
             self.game_lock.release()
 
-    def handle_client_move(self, client_number):
-        while True:
-            try:
-                move = pickle.loads(self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE))
-            except ConnectionResetError:
-                move = QUIT
-
-            if move == QUIT:
-                self.client_status[client_number] = CLIENT_IS_CLOSING
-                self.client_number[client_number] = FREE
-                self.game.delete_player(client_number)
-                self.connections_needed_to_start += CLOSED_CONNECTION
-                self.number_of_started_connections -= CLOSED_CONNECTION
-                self.number_of_started_games -= GAME_IS_ENDED
-                sys.exit()
-
-            if self.server_status == SERVER_IS_CLOSING:
-                self.client_sockets[client_number].close()
-                sys.exit()
-
-            print(move)
-            # self.game.make_move(client_number, move)
-
     def send_position_to_client(self, client_number):
         while True:
-            # self.game_lock.acquire()
-            # if self.server_status == SERVER_IS_CLOSING:
-            #     #self.client_sockets[client_number].send(pickle.dumps(CLOSE_SIGNAL))
-            #     self.game_lock.release()
-            #     sys.exit()
-            #
-            # try:
-            #     self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
-            # except ConnectionResetError:
-            #     self.client_status[client_number] = CLIENT_IS_CLOSING
-            #
-            # if self.client_status[client_number] == CLIENT_IS_CLOSING:
-            #     self.client_sockets[client_number].close()
-            #     self.game_lock.release()
-            #     sys.exit()
-            #
-            # self.game_lock.release()
-            self.start_round[client_number].acquire()
-
-    def round_timer(self):
-        while True:
-            for start_round in self.start_round:
-                start_round.release()
-
             if self.server_status == SERVER_IS_CLOSING:
+                self.client_sockets[client_number].send(pickle.dumps(CLOSE_SIGNAL))
+                self.game_lock.release()
+                sys.exit()
+
+            try:
+                self.client_sockets[client_number].send(pickle.dumps([self.player[0].rect.x, self.player[0].rect.y]))
+                move = pickle.loads(self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE))
+            except ConnectionResetError:
+                self.client_status[client_number] = CLIENT_IS_CLOSING
+
+            print(move)
+            self.player[0].move(move)
+
+            if self.client_status[client_number] == CLIENT_IS_CLOSING:
+                self.client_sockets[client_number].close()
+                self.game_lock.release()
                 sys.exit()
 
     def open_server_commands(self):

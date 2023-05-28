@@ -1,6 +1,6 @@
 import pygame
 
-PLAYER_SPEED = 4
+PLAYER_SPEED = 10
 PLAYER_SCALE = 5
 
 
