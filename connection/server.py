@@ -93,8 +93,9 @@ class Server:
         # wait for clients disconnection for closing server
         for client_threads in self.client_threads:
             for thread in client_threads:
-                while thread.is_alive():
-                    continue
+                if thread:
+                    while thread.is_alive():
+                        continue
 
         self.server_socket.close()
 
@@ -153,7 +154,11 @@ class Server:
 
     def handle_client_move(self, client_number):
         while True:
-            move = self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE).decode()
+            try:
+                move = self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE).decode()
+            except ConnectionResetError:
+                move = QUIT
+
             self.game_lock.acquire()
 
             if move == QUIT:
@@ -184,7 +189,10 @@ class Server:
                 self.game_lock.release()
                 sys.exit()
 
-            self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
+            try:
+                self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
+            except ConnectionResetError:
+                self.client_status[client_number] = CLIENT_IS_CLOSING
 
             if self.client_status[client_number] == CLIENT_IS_CLOSING:
                 self.client_sockets[client_number].close()

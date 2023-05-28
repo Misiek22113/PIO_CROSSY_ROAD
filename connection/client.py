@@ -8,6 +8,7 @@ from game_simulation.game import Game
 
 QUIT = "q"
 CLOSE_SIGNAL = None
+CLOSE_SIGNAL_ERROR = False
 
 SERVER_IS_NOT_CONNECT = None
 
@@ -59,10 +60,14 @@ class Client:
                 self.server_socket.close()
                 sys.exit()
 
-            positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
+            try:
+                positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
+            except ConnectionResetError:
+                positions = CLOSE_SIGNAL_ERROR
 
-            if positions == CLOSE_SIGNAL:
-                self.server_socket.sendall(CLOSING_MESSAGE)
+            if positions == CLOSE_SIGNAL or positions == CLOSE_SIGNAL_ERROR:
+                if position == CLOSE_SIGNAL:
+                    self.server_socket.sendall(CLOSING_MESSAGE)
                 self.client_status = CLIENT_IS_CLOSING
                 print("Server is closed. Click anything to close program.")
                 sys.exit()
@@ -82,7 +87,10 @@ class Client:
                 self.server_socket.close()
                 sys.exit()
 
-            self.server_socket.sendall(move.encode())
+            try:
+                self.server_socket.sendall(move.encode())
+            except ConnectionResetError:
+                move = QUIT
 
             if move == QUIT:
                 self.client_status = CLIENT_IS_CLOSING
