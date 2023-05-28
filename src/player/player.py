@@ -5,7 +5,7 @@ PLAYER_SCALE = 5
 
 
 def create_player(x, y, picked_character):
-    player_img = pygame.image.load(f"../assets/characters/{picked_character}/idle/0.png")
+    player_img = pygame.image.load(f"assets/characters/{picked_character}/idle/0.png")
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))

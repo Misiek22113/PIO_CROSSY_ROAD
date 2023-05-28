@@ -4,8 +4,10 @@ import sys
 import time
 import threading
 import numpy as np
+import pygame
 
 from game_simulation.game import Game
+from player.local_window_player_movement import LocalWindowPlayerMovement, FPS, SCREEN_WIDTH, SCREEN_HEIGHT
 
 NEW_CONNECTION = 1
 
@@ -50,6 +52,8 @@ EMPTY_PLACE_FOR_SOCKET = None
 class Server:
 
     def __init__(self):
+        pygame.init()
+
         # server's variables
         self.ip = SERVER_IP
         self.port = SERVER_PORT
@@ -74,10 +78,25 @@ class Server:
         self.game = Game()
         self.game_lock = threading.Lock()
         self.start_round = [threading.Semaphore(SEMAPHORE_INIT_VALUE) for _ in range(MAX_PLAYERS)]
+        self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT)
 
     def start_server(self):
-        threading.Thread(target=self.open_server_commands).start()
+        threading.Thread(target=self.start_connection)
 
+        while self.local_window.is_running:
+            self.local_window.clock.tick(FPS)
+            self.local_window.draw_background()
+            self.local_window.handle_events()
+
+            # player.move()
+            # player.print_player(local_window)
+
+            pygame.display.update()
+
+            # TODO remember to delete this when real main window will be implemented
+        pygame.quit()
+
+    def start_connection(self):
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
             threading.Thread(target=self.connect_client).start()
 
