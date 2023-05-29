@@ -27,6 +27,7 @@ class Client:
         self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player = create_player(100, 100, "spiderman")
         self.move = {
+                    "quit": False,
                     "moving_left": False,
                     "moving_right": False,
                     "moving_up": False,
@@ -40,15 +41,23 @@ class Client:
             self.local_window.clock.tick(FPS)
             self.local_window.draw_background()
             self.local_window.handle_events(self.move)
-
-            positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
             self.server_socket.sendall(pickle.dumps(self.move))
+            positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
+
+            if positions == 1:
+                self.local_window.is_running = False
+                continue
+            elif positions == 2:
+                self.local_window.is_running = False
+                continue
+
             self.player.set_xy(positions[0], positions[1])
             self.player.print_player(self.local_window)
 
             pygame.display.update()
 
         pygame.quit()
+
 
 # TODO delete later
 client = Client()

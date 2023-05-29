@@ -23,7 +23,8 @@ class LocalWindowPlayerMovement:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.is_running = False
-                
+                move["quit"] = True
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     move["moving_left"] = True
