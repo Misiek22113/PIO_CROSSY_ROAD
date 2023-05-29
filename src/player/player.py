@@ -32,9 +32,9 @@ class Player:
         self.rect.x = self.x
         self.rect.y = self.y
 
-    def set_xy(self, x, y):
-        self.rect.x = x
-        self.rect.y = y
+    def set_xy(self, xy):
+        self.rect.x = xy[0]
+        self.rect.y = xy[1]
 
     def print_player(self, local_window):
         local_window.screen.blit(self.skin, self.rect)
