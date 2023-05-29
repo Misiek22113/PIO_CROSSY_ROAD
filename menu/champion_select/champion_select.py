@@ -13,20 +13,17 @@ class ChampionSelect(Window):
         self.width = width
         self.height = height
         self.BACK_BUTTON = None
+        self.NEXT_BUTTON = None
         self.CHAMPION_SELECT_MOUSE_POS = None
-        self.CHAMPIONS = [[pygame.image.load("assets/characters/cute_boy/idle/0.png"), "cute boy"],
-                          [pygame.image.load("assets/characters/engineer/idle/1.png"), "engineer"],
-                          [pygame.image.load("assets/characters/frog/idle/0.png"), "frog"],
-                          [pygame.image.load("assets/characters/girl/idle/0.png"), "girl"],
-                          [pygame.image.load("assets/characters/spiderman/idle/0.png"), "spiderman"],
-                          [pygame.image.load("assets/characters/student/idle/0.png"), "student"]]
 
     def print_champion_select_menu(self):
         scale = 10
         self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
-        self.draw_text("Choose your Champion w", 640, 100, self.FONT_CHAMPION_SELECT, self.TEXT_COLOR)
+        self.draw_text("Choose your Champion", 640, 100, self.FONT_CHAMPION_SELECT, self.TEXT_COLOR)
         self.draw_text(self.CHAMPIONS[self.champion_index][1], 640, 500, self.FONT_CHAMPION_SELECT, self.TEXT_COLOR)
-        self.BACK_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 650), text_input="BACK", font=self.FONT_OPTION,
+        self.BACK_BUTTON = Button(image=self.MENU_BUTTON, pos=(440, 650), text_input="BACK", font=self.FONT_OPTION,
+                                  base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
+        self.NEXT_BUTTON = Button(image=self.MENU_BUTTON, pos=(840, 650), text_input="NEXT", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
         self.BUTTON_ARROW_LEFT = Button(image=None, pos=(400, 350), text_input="<", font=self.FONT_OPTION,
                                         base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
@@ -52,7 +49,7 @@ class ChampionSelect(Window):
 
             self.CHAMPION_SELECT_MOUSE_POS = pygame.mouse.get_pos()
 
-            for button in self.BUTTON_ARROW_LEFT, self.BUTTON_ARROW_RIGHT, self.BACK_BUTTON:
+            for button in self.BUTTON_ARROW_LEFT, self.BUTTON_ARROW_RIGHT, self.BACK_BUTTON, self.NEXT_BUTTON:
                 button.change_color(self.CHAMPION_SELECT_MOUSE_POS)
                 button.update(self.screen)
 
@@ -60,6 +57,8 @@ class ChampionSelect(Window):
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.BACK_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         return "back"
+                    if self.NEXT_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
+                        return "lobby"
                     if self.BUTTON_ARROW_RIGHT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         self.change_champion_index(self.champion_index + 1)
                     if self.BUTTON_ARROW_LEFT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):

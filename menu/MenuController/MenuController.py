@@ -20,7 +20,9 @@ class MenuController:
                 actual = self.menu.handle_menu_loop()
             elif actual == "controls":
                 actual = self.controls.handle_controls_loop()
-            elif actual == "play":
+            elif actual == "play" or actual == "champion_select":
                 actual = self.champion_select.handle_champion_select_loop()
             elif actual == "back":
                 actual = self.menu.handle_menu_loop()
+            elif actual == "lobby":
+                actual = self.lobby.handle_lobby_loop()

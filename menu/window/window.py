@@ -4,7 +4,6 @@ pygame.font.init()
 
 
 class Window:
-
     BACKGROUND_IMAGE = pygame.image.load("menu/menu_background.png")
     MENU_BUTTON = pygame.image.load("menu/button_menu.png")
     TEXT_COLOR = (228, 36, 48)
@@ -13,6 +12,12 @@ class Window:
     FONT_HEADER = pygame.font.Font("menu/PressStart2P-Regular.ttf", 80)
     FONT_OPTION = pygame.font.Font("menu/PressStart2P-Regular.ttf", 40)
     FONT_CHAMPION_SELECT = pygame.font.Font("menu/PressStart2P-Regular.ttf", 60)
+    CHAMPIONS = [[pygame.image.load("assets/characters/cute_boy/idle/0.png"), "cute boy"],
+                 [pygame.image.load("assets/characters/engineer/idle/1.png"), "engineer"],
+                 [pygame.image.load("assets/characters/frog/idle/0.png"), "frog"],
+                 [pygame.image.load("assets/characters/girl/idle/0.png"), "girl"],
+                 [pygame.image.load("assets/characters/spiderman/idle/0.png"), "spiderman"],
+                 [pygame.image.load("assets/characters/student/idle/0.png"), "student"]]
 
     def __init__(self, name, width, height):
         self.height = height

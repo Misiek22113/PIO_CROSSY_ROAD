@@ -8,14 +8,39 @@ class Controls(Window):
 
     def __init__(self, width, height):
         super().__init__("Controls", width, height)
+        scale = 7
         self.width = width
         self.height = height
         self.BACK_BUTTON = None
         self.EXIT_BUTTON = None
         self.CONTROLS_MOUSE_POS = pygame.mouse.get_pos()
+        self.KEY_W = pygame.image.load("assets/controls/key_w.png")
+        self.KEY_S = pygame.image.load("assets/controls/key_s.png")
+        self.KEY_A = pygame.image.load("assets/controls/key_a.png")
+        self.KEY_D = pygame.image.load("assets/controls/key_d.png")
+        self.KEY_W = pygame.transform.scale(self.KEY_W,
+                                            (int(self.KEY_W.get_width() * scale), int(self.KEY_W.get_height() * scale)))
+        self.KEY_A = pygame.transform.scale(self.KEY_A,
+                                            (int(self.KEY_A.get_width() * scale), int(self.KEY_A.get_height() * scale)))
+        self.KEY_S = pygame.transform.scale(self.KEY_S,
+                                            (int(self.KEY_S.get_width() * scale), int(self.KEY_S.get_height() * scale)))
+        self.KEY_D = pygame.transform.scale(self.KEY_D,
+                                            (int(self.KEY_D.get_width() * scale), int(self.KEY_D.get_height() * scale)))
+        self.KEY_ARROW = pygame.image.load("assets/controls/key_arrow.png")
+
+    def print_controls(self):
+        key_rect = self.KEY_W.get_rect(center=(640, 450))
+        self.screen.blit(self.KEY_W, key_rect)
+        key_rect = self.KEY_A.get_rect(center=(490, 600))
+        self.screen.blit(self.KEY_A, key_rect)
+        key_rect = self.KEY_S.get_rect(center=(640, 600))
+        self.screen.blit(self.KEY_S, key_rect)
+        key_rect = self.KEY_D.get_rect(center=(790, 600))
+        self.screen.blit(self.KEY_D, key_rect)
 
     def print_controls_menu(self):
         self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
+        self.print_controls()
         self.draw_text("CONTROLS", 640, 100, self.FONT_HEADER, self.TEXT_COLOR)
         self.BACK_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 650), text_input="BACK", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
