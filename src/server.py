@@ -1,5 +1,7 @@
 import pickle
 import socket
+import sys
+import threading
 
 from player.player import create_player
 
@@ -18,14 +20,41 @@ class Server:
         self.server_socket.listen(1)
         self.client_socket = None
         self.player = create_player(100, 100, "spiderman")
+        self.server_status = False
 
     def start_connection(self):
-        self.client_socket, _ = self.server_socket.accept()
-        while True:
-            self.client_socket.send(pickle.dumps([self.player.rect.x, self.player.rect.y]))
-            move = pickle.loads(self.client_socket.recv(SIZE_OF_CLIENT_MESSAGE))
+        threading.Thread(target=self.get_quit).start()
 
-            self.player.move(move)
+        try:
+            self.client_socket, _ = self.server_socket.accept()
+        except OSError:
+            sys.exit()
+
+        while True:
+            move = pickle.loads(self.client_socket.recv(SIZE_OF_CLIENT_MESSAGE))
+            if not move['quit']:
+                self.player.move(move)
+            else:
+                self.client_socket.send(pickle.dumps(1))
+                break
+
+            if self.server_status:
+                self.client_socket.send(pickle.dumps(2))
+                break
+
+            self.client_socket.send(pickle.dumps([self.player.rect.x, self.player.rect.y]))
+
+        if self.server_status:
+            print("Click something to close server.")
+        self.client_socket.close()
+
+    def get_quit(self):
+        while True:
+            q = input()
+            if q == "q":
+                self.server_status = True
+                self.server_socket.close()
+                break
 
 
 # TODO delete later
