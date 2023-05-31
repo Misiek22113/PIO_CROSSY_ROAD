@@ -4,6 +4,7 @@ import sys
 import threading
 import pickle
 import time
+import map.map
 
 import pygame
 
@@ -41,6 +42,7 @@ class Client:
                         "moving_up": False,
                         "moving_down": False
                      }
+        self.map = map.map.create_map(self.local_window.screen)
 
     def start_client(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -52,7 +54,7 @@ class Client:
 
         while self.local_window.is_running:
             self.local_window.clock.tick(FPS)
-            self.local_window.draw_background()
+            self.map.draw_scrolling_background()
             self.local_window.handle_events(self.move)
             try:
                 self.server_socket.sendall(pickle.dumps(self.move))
