@@ -1,6 +1,6 @@
 import pygame
 import sys
-from src.menu.button.Button import Button
+from src.menu.button.button import Button
 from src.menu.window.window import Window
 
 EMPTY_BUTTON = None
@@ -23,8 +23,8 @@ class Menu(Window):
         self.PLAY_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 350), text_input="PLAY", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
         self.CONTROLS_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 500), text_input="CONTROLS",
-                                      font=self.FONT_OPTION,
-                                      base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
+                                      font=self.FONT_OPTION, base_color=self.BASE_COLOR,
+                                      hovering_color=self.HOVERING_COLOR)
         self.EXIT_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 650), text_input="EXIT", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
 

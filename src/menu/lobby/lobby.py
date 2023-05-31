@@ -1,10 +1,17 @@
 import pickle
+import sys
 
 import pygame
-import sys
-from src.menu.window.window import Window
-from src.menu.button.Button import Button
 
+from src.menu.window.window import Window
+from src.menu.button.button import Button
+
+CHOSEN_CHAMPIONS_INFORMATION_REQUEST = b"P"
+CHECK_CONNECTION = 0
+QUIT = b"Q"
+BACK = b"B"
+PLAYER_IS_NOT_CONNECTED = -1
+PLAYER_POSITION_IN_LOBBY = 400
 EMPTY_BUTTON = None
 
 
@@ -44,33 +51,39 @@ class Lobby(Window):
             self.LEAVE_BUTTON.update(self.screen)
 
             try:
-                socket.sendall(b"P")
-                champion_indexes = pickle.loads(socket.recv(28))
+                socket.sendall(CHOSEN_CHAMPIONS_INFORMATION_REQUEST)
+                chosen_champions = pickle.loads(socket.recv(28))
             except ConnectionResetError:
                 socket.close()
                 return "menu"
 
-            if champion_indexes[0] == None:
+            if chosen_champions[CHECK_CONNECTION] is None:
                 socket.close()
                 return "menu"
 
-            for player_number, index in enumerate(champion_indexes):
-                if index != -1:
-                    self.draw_player(240 + (400 * player_number), 350, index)
+            for player_number, chosen_champion in enumerate(chosen_champions):
+                if chosen_champion != PLAYER_IS_NOT_CONNECTED:
+                    self.draw_player(240 + (PLAYER_POSITION_IN_LOBBY * player_number), 350, chosen_champion)
 
-            try:
-                for event in pygame.event.get():
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if self.LEAVE_BUTTON.check_for_input(self.LOBBY_MOUSE_POS):
-                            socket.sendall(b"B")
-                            return "champion_select"
-                    if event.type == pygame.QUIT:
-                        socket.sendall(b"Q")
-                        socket.close()
-                        pygame.quit()
-                        sys.exit()
-            except ConnectionResetError:
-                socket.close()
-                return "menu"
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.LEAVE_BUTTON.check_for_input(self.LOBBY_MOUSE_POS):
+                        try:
+                            socket.sendall(BACK)
+                        except ConnectionResetError:
+                            socket.close()
+                            return "menu"
+
+                        return "champion_select"
+
+                if event.type == pygame.QUIT:
+                    try:
+                        socket.sendall(QUIT)
+                    except ConnectionResetError:
+                        pass
+
+                    socket.close()
+                    pygame.quit()
+                    sys.exit()
 
             pygame.display.update()
