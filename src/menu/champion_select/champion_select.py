@@ -59,17 +59,38 @@ class ChampionSelect(Window):
                 button.update(self.screen)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    try:
+                        socket.sendall(pickle.dumps(-1))
+                    except ConnectionResetError:
+                        pass
+
+                    socket.close()
                     pygame.quit()
                     sys.exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.BACK_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
-                        return "back"
-                    if self.NEXT_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
-                        socket.sendall(pickle.dumps(self.champion_index))
+                        try:
+                            socket.sendall(pickle.dumps(-1))
+                        except ConnectionResetError:
+                            pass
 
-                        if socket.recv(40).decode() == "YES":
+                        socket.close()
+                    if self.NEXT_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
+                        try:
+                            socket.sendall(pickle.dumps(self.champion_index))
+                            message = socket.recv(40).decode()
+                        except ConnectionResetError:
+                            socket.close()
+                            return "menu"
+
+                        if message == "Q":
+                            socket.close()
+                            return "menu"
+
+                        if message == "YES":
                             return "lobby"
+
                     if self.BUTTON_ARROW_RIGHT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         self.change_champion_index(self.champion_index + CHAMPION_INDEX_OFFSET)
                     if self.BUTTON_ARROW_LEFT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):

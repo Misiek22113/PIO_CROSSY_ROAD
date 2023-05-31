@@ -40,8 +40,7 @@ class Client:
 
     def start_game(self):
         menu = MenuController()
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        menu.handle_main_menu_loop(self.server_socket, (self.server_ip, self.server_port))
+        menu.handle_main_menu_loop((self.server_ip, self.server_port))
 
 client = Client()
 client.start_game()

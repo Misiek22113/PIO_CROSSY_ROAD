@@ -145,69 +145,70 @@ class Server:
                 self.client_sockets[client_number].sendall(CONNECTION_IS_SUCCESSFUL)
             self.game_lock.release()
 
-    def handle_client(self, player_number):
-        while True:
-            chosen_champ = pickle.loads(self.client_sockets[player_number].recv(124))
-            if chosen_champ in self.chosen_champs:
-                self.client_sockets[player_number].sendall(b"NO")
-            else:
-                self.client_sockets[player_number].sendall(b"YES")
-                self.chosen_champs[player_number] = chosen_champ
+    def handle_client(self, client_number):
+        game = True
+        while game:
+            chosen_champ = pickle.loads(self.client_sockets[client_number].recv(124))
+            if chosen_champ == -1:
                 break
 
-        while True:
-            self.client_sockets[player_number].recv(40)
-            self.client_sockets[player_number].send(pickle.dumps(self.chosen_champs))
+            if self.server_status == SERVER_IS_CLOSING:
+                try:
+                    self.client_sockets[client_number].sendall(b"Q")
+                except ConnectionResetError:
+                    pass
+                return
 
-    # def handle_client_move(self, client_number):
-    #     while True:
-    #         try:
-    #             move = self.client_sockets[client_number].recv(SIZE_OF_CLIENT_MESSAGE).decode()
-    #         except ConnectionResetError:
-    #             move = QUIT
-    #
-    #         self.game_lock.acquire()
-    #
-    #         if move == QUIT:
-    #             self.client_status[client_number] = CLIENT_IS_CLOSING
-    #             self.client_number[client_number] = FREE
-    #             self.game.delete_player(client_number)
-    #             self.connections_needed_to_start += CLOSED_CONNECTION
-    #             self.number_of_started_connections -= CLOSED_CONNECTION
-    #             self.number_of_started_games -= GAME_IS_ENDED
-    #             self.game_lock.release()
-    #             sys.exit()
-    #
-    #         if self.server_status == SERVER_IS_CLOSING:
-    #             self.client_sockets[client_number].close()
-    #             self.game_lock.release()
-    #             sys.exit()
-    #
-    #         self.game.make_move(client_number, move)
-    #         self.game_lock.release()
-    #
-    #         self.start_round[client_number].acquire()
-    #
-    # def send_position_to_client(self, client_number):
-    #     while True:
-    #         self.game_lock.acquire()
-    #         if self.server_status == SERVER_IS_CLOSING:
-    #             self.client_sockets[client_number].send(pickle.dumps(CLOSE_SIGNAL))
-    #             self.game_lock.release()
-    #             sys.exit()
-    #
-    #         try:
-    #             self.client_sockets[client_number].send(pickle.dumps(self.game.get_positions()))
-    #         except ConnectionResetError:
-    #             self.client_status[client_number] = CLIENT_IS_CLOSING
-    #
-    #         if self.client_status[client_number] == CLIENT_IS_CLOSING:
-    #             self.client_sockets[client_number].close()
-    #             self.game_lock.release()
-    #             sys.exit()
-    #
-    #         self.game_lock.release()
-    #         self.start_round[client_number].acquire()
+            if chosen_champ in self.chosen_champs:
+                try:
+                    self.client_sockets[client_number].sendall(b"NO")
+                except ConnectionResetError:
+                    break
+
+                continue
+            else:
+                try:
+                    self.client_sockets[client_number].sendall(b"YES")
+                except ConnectionResetError:
+                    break
+
+                self.chosen_champs[client_number] = chosen_champ
+
+            while True:
+                try:
+                    sended = self.client_sockets[client_number].recv(40).decode()
+                except ConnectionResetError:
+                    game = False
+                    break
+
+                if self.server_status == SERVER_IS_CLOSING:
+                    try:
+                        self.client_sockets[client_number].send(pickle.dumps([None, None, None]))
+                    except ConnectionResetError:
+                        pass
+                    return
+
+                if sended == "P":
+                    try:
+                        self.client_sockets[client_number].send(pickle.dumps(self.chosen_champs))
+                    except ConnectionResetError:
+                        game = False
+                        break
+                elif sended == "B":
+                    self.chosen_champs[client_number] = -1
+                    break
+                else:
+                    game = False
+                    self.chosen_champs[client_number] = -1
+                    break
+
+        self.client_status[client_number] = CLIENT_IS_CLOSING
+        self.client_number[client_number] = FREE
+        self.connections_needed_to_start += CLOSED_CONNECTION
+        self.number_of_started_connections -= CLOSED_CONNECTION
+        self.number_of_started_games -= GAME_IS_ENDED
+        self.client_sockets[client_number].close()
+        sys.exit()
 
     def open_server_commands(self):
         while True:

@@ -35,8 +35,6 @@ class Lobby(Window):
         self.draw_text(self.CHAMPIONS[champion_index][1], x, 500, self.FONT_OPTION, self.TEXT_COLOR)
 
     def handle_lobby_loop(self, socket):
-        champion_indexes = [-1, -1, -1]
-
         while True:
             self.print_lobby_menu()
 
@@ -46,22 +44,33 @@ class Lobby(Window):
             self.LEAVE_BUTTON.update(self.screen)
 
             try:
-                socket.sendall(b"G")
+                socket.sendall(b"P")
                 champion_indexes = pickle.loads(socket.recv(28))
-                print(champion_indexes)
-            except pickle.UnpicklingError:
-                print("error")
+            except ConnectionResetError:
+                socket.close()
+                return "menu"
+
+            if champion_indexes[0] == None:
+                socket.close()
+                return "menu"
 
             for player_number, index in enumerate(champion_indexes):
                 if index != -1:
                     self.draw_player(240 + (400 * player_number), 350, index)
 
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.LEAVE_BUTTON.check_for_input(self.LOBBY_MOUSE_POS):
-                        return "champion_select"
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            try:
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self.LEAVE_BUTTON.check_for_input(self.LOBBY_MOUSE_POS):
+                            socket.sendall(b"B")
+                            return "champion_select"
+                    if event.type == pygame.QUIT:
+                        socket.sendall(b"Q")
+                        socket.close()
+                        pygame.quit()
+                        sys.exit()
+            except ConnectionResetError:
+                socket.close()
+                return "menu"
 
             pygame.display.update()
