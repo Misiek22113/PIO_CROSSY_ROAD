@@ -1,7 +1,9 @@
 import pygame
 import sys
-from menu.button.Button import Button
-from menu.window.window import Window
+from src.menu.button.Button import Button
+from src.menu.window.window import Window
+
+EMPTY_BUTTON = None
 
 
 class Menu(Window):
@@ -10,13 +12,13 @@ class Menu(Window):
         super().__init__(name, width, height)
         self.width = width
         self.height = height
-        self.PLAY_BUTTON = None
-        self.CONTROLS_BUTTON = None
-        self.EXIT_BUTTON = None
-        self.MENU_MOUSE_POS = None
+        self.PLAY_BUTTON = EMPTY_BUTTON
+        self.CONTROLS_BUTTON = EMPTY_BUTTON
+        self.EXIT_BUTTON = EMPTY_BUTTON
+        self.MENU_MOUSE_POS = EMPTY_BUTTON
 
     def print_window_menu(self):
-        self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
+        self.screen.blit(self.BACKGROUND_IMAGE, self.BACKGROUND_IMAGE_POS)
         self.draw_text("PASS THE EXAM", 640, 100, self.FONT_HEADER, self.TEXT_COLOR)
         self.PLAY_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 350), text_input="PLAY", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
@@ -40,6 +42,7 @@ class Menu(Window):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.PLAY_BUTTON.check_for_input(self.MENU_MOUSE_POS):
                         return "play"

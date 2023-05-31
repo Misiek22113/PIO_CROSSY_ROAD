@@ -1,6 +1,9 @@
-import pygame, sys
-from menu.window.window import Window
-from menu.button.Button import Button
+import pygame
+import sys
+from src.menu.window.window import Window
+from src.menu.button.Button import Button
+
+EMPTY_BUTTON = None
 
 
 class Lobby(Window):
@@ -9,11 +12,11 @@ class Lobby(Window):
         super().__init__("lobby", width, height)
         self.width = width
         self.height = height
-        self.LEAVE_BUTTON = None
-        self.LOBBY_MOUSE_POS = None
+        self.LEAVE_BUTTON = EMPTY_BUTTON
+        self.LOBBY_MOUSE_POS = EMPTY_BUTTON
 
     def print_lobby_menu(self):
-        self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
+        self.screen.blit(self.BACKGROUND_IMAGE, self.BACKGROUND_IMAGE_POS)
         self.draw_text("Waiting for other players...", 640, 100, self.FONT_OPTION, self.TEXT_COLOR)
         self.draw_text("Player 1", 240, 200, self.FONT_OPTION, self.TEXT_COLOR)
         self.draw_text("Player 2", 640, 200, self.FONT_OPTION, self.TEXT_COLOR)

@@ -1,16 +1,13 @@
 import pygame
-from menu.Menu import Menu
-from pygame.locals import *
-from menu.controls.Controls import Controls
-from menu.lobby.Lobby import Lobby
-from menu.MenuController.MenuController import MenuController
+from src.menu.Menu import Menu
+from src.menu.controls.Controls import Controls
+from src.menu.lobby.Lobby import Lobby
+from src.menu.MenuController.MenuController import MenuController
 
 pygame.init()
 
 menu = MenuController()
 
 menu.handle_main_menu_loop()
-
-
 
 pygame.quit()

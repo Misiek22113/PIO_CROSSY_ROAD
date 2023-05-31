@@ -1,7 +1,9 @@
 import pygame
 import sys
-from menu.button.Button import Button
-from menu.window.window import Window
+from src.menu.button.Button import Button
+from src.menu.window.window import Window
+
+EMPTY_BUTTON = None
 
 
 class Controls(Window):
@@ -11,8 +13,8 @@ class Controls(Window):
         scale = 7
         self.width = width
         self.height = height
-        self.BACK_BUTTON = None
-        self.EXIT_BUTTON = None
+        self.BACK_BUTTON = EMPTY_BUTTON
+        self.EXIT_BUTTON = EMPTY_BUTTON
         self.CONTROLS_MOUSE_POS = pygame.mouse.get_pos()
         self.KEY_W = pygame.image.load("assets/controls/key_w.png")
         self.KEY_S = pygame.image.load("assets/controls/key_s.png")
@@ -39,7 +41,7 @@ class Controls(Window):
         self.screen.blit(self.KEY_D, key_rect)
 
     def print_controls_menu(self):
-        self.screen.blit(self.BACKGROUND_IMAGE, (0, 0))
+        self.screen.blit(self.BACKGROUND_IMAGE, self.BACKGROUND_IMAGE_POS)
         self.print_controls()
         self.draw_text("CONTROLS", 640, 100, self.FONT_HEADER, self.TEXT_COLOR)
         self.BACK_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 650), text_input="BACK", font=self.FONT_OPTION,
