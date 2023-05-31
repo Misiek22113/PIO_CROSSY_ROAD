@@ -1,9 +1,7 @@
-import pickle
-
 import pygame
 import sys
-from src.menu.window.window import Window
-from src.menu.button.Button import Button
+from menu.window.window import Window
+from menu.button.Button import Button
 
 EMPTY_BUTTON = None
 
@@ -34,9 +32,7 @@ class Lobby(Window):
         self.screen.blit(img, img_rect)
         self.draw_text(self.CHAMPIONS[champion_index][1], x, 500, self.FONT_OPTION, self.TEXT_COLOR)
 
-    def handle_lobby_loop(self, socket):
-        champion_indexes = [-1, -1, -1]
-
+    def handle_lobby_loop(self):
         while True:
             self.print_lobby_menu()
 
@@ -45,16 +41,7 @@ class Lobby(Window):
             self.LEAVE_BUTTON.change_color(self.LOBBY_MOUSE_POS)
             self.LEAVE_BUTTON.update(self.screen)
 
-            try:
-                socket.sendall(b"G")
-                champion_indexes = pickle.loads(socket.recv(28))
-                print(champion_indexes)
-            except pickle.UnpicklingError:
-                print("error")
-
-            for player_number, index in enumerate(champion_indexes):
-                if index != -1:
-                    self.draw_player(240 + (400 * player_number), 350, index)
+            self.draw_player(240, 350, 1)
 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:

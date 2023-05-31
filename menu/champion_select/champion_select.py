@@ -1,14 +1,11 @@
-import pickle
-
 import pygame
 import sys
-from src.menu.button.Button import Button
-from src.menu.window.window import Window
+from menu.button.Button import Button
+from menu.window.window import Window
 
 EMPTY_BUTTON = None
 CHARACTER_SCALE = 10
 CHAMPION_INDEX_OFFSET = 1
-
 
 class ChampionSelect(Window):
     def __init__(self, width, height):
@@ -48,7 +45,7 @@ class ChampionSelect(Window):
         elif to_change < 0:
             self.champion_index = max_index
 
-    def handle_champion_select_loop(self, socket):
+    def handle_champion_select_loop(self):
         while True:
             self.print_champion_select_menu()
 
@@ -66,10 +63,7 @@ class ChampionSelect(Window):
                     if self.BACK_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         return "back"
                     if self.NEXT_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
-                        socket.sendall(pickle.dumps(self.champion_index))
-
-                        if socket.recv(40).decode() == "YES":
-                            return "lobby"
+                        return "lobby"
                     if self.BUTTON_ARROW_RIGHT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         self.change_champion_index(self.champion_index + CHAMPION_INDEX_OFFSET)
                     if self.BUTTON_ARROW_LEFT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):

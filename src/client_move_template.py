@@ -1,9 +1,5 @@
-import os
 import socket
-import sys
-import threading
 import pickle
-import time
 
 import pygame
 

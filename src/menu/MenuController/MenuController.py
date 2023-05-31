@@ -15,15 +15,22 @@ class MenuController:
         self.lobby = Lobby(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.champion_select = ChampionSelect(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-    def handle_main_menu_loop(self):
+    def handle_main_menu_loop(self, socket, connection):
         actual = "menu"
 
         while True:
             if actual == "menu" or actual == "back":
-                actual = self.menu.handle_menu_loop()
+                actual, connection = self.menu.handle_menu_loop(socket, connection)
+
+                # Niedźwiedź make communication then.
+                if connection == 0:
+                    print("Wrong")
+
+                if connection == 1:
+                    print("Full")
             elif actual == "controls":
                 actual = self.controls.handle_controls_loop()
             elif actual == "play" or actual == "champion_select":
-                actual = self.champion_select.handle_champion_select_loop()
+                actual = self.champion_select.handle_champion_select_loop(socket)
             elif actual == "lobby":
-                actual = self.lobby.handle_lobby_loop()
+                actual = self.lobby.handle_lobby_loop(socket)

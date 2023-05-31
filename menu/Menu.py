@@ -1,7 +1,7 @@
 import pygame
 import sys
-from src.menu.button.Button import Button
-from src.menu.window.window import Window
+from menu.button.Button import Button
+from menu.window.window import Window
 
 EMPTY_BUTTON = None
 
@@ -28,7 +28,7 @@ class Menu(Window):
         self.EXIT_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 650), text_input="EXIT", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
 
-    def handle_menu_loop(self, socket, connection_detail):
+    def handle_menu_loop(self):
         while True:
             self.print_window_menu()
 
@@ -45,19 +45,7 @@ class Menu(Window):
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.PLAY_BUTTON.check_for_input(self.MENU_MOUSE_POS):
-                        connection = 0
-                        try:
-                            socket.connect(connection_detail)
-
-                            connection_message = socket.recv(124).decode()
-                            if connection_message == "NO":
-                                connection = 1
-                                return "menu", connection
-
-                            connection = 2
-                            return "play", connection
-                        except ConnectionRefusedError:
-                            return "menu", connection
+                        return "play"
                     if self.CONTROLS_BUTTON.check_for_input(self.MENU_MOUSE_POS):
                         return "controls"
                     if self.EXIT_BUTTON.check_for_input(self.MENU_MOUSE_POS):
