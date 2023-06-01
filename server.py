@@ -57,8 +57,8 @@ SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT = b"Q"
 SERVER_QUIT_SIGNAL_IN_LOBBY = [None, None, None]
 
 LOBBY = 0
-CONTINUE = 1
-BREAK = -1
+CHAMPION_SELECT = 1
+LEFT_CHAMPION_SELECT = -1
 
 
 class Server:
@@ -145,9 +145,9 @@ class Server:
             try:
                 champion_select_result = self.champion_select(client_number)
 
-                if champion_select_result == CONTINUE:
+                if champion_select_result == CHAMPION_SELECT:
                     continue
-                elif champion_select_result == BREAK:
+                elif champion_select_result == LEFT_CHAMPION_SELECT:
                     break
 
                 while True:
@@ -172,15 +172,15 @@ class Server:
         chosen_champion = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
 
         if chosen_champion == CLIENT_QUIT:
-            return BREAK
+            return LEFT_CHAMPION_SELECT
 
         if self.server_status == SERVER_IS_CLOSING:
             self.client_sockets[client_number].sendall(SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT)
-            return BREAK
+            return LEFT_CHAMPION_SELECT
 
         if chosen_champion in self.chosen_champions:
             self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
-            return CONTINUE
+            return CHAMPION_SELECT
 
         else:
             self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
