@@ -5,48 +5,60 @@ import threading
 
 import numpy as np
 
-SERVER_QUIT = [None, None, None]
-CONNECTION_IS_DEACTIVATED = False
-CONNECTION_IS_ACTIVE = True
-BACK_TO_CHAMPION_SELECT = "B"
-CHOSEN_CHAMPIONS_INFORMATION_REQUEST = "P"
-CHAMPION_IS_AVAILABLE = b"YES"
-CHAMPION_IS_NOT_AVAILABLE = b"NO"
-QUIT_SIGNAL = b"Q"
-CLIENT_QUIT = -1
-
-CHAMPION_IS_NOT_CHOSEN = -1
-NEW_CONNECTION = 1
-
-CONNECTION_IS_SUCCESSFUL = b"OK"
-SERVER_IS_FULL = b"NO"
+# server consts
+QUIT = "q"
 
 SERVER_IS_CLOSING = True
 SERVER_IS_RUNNING = False
 
-CLOSED_CONNECTION = 1
-QUIT = "q"
+MAX_PLAYERS = 3
 
 GAME_IS_ENDED = 1
-MAX_PLAYERS = 3
 NEW_GAME = 1
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 6001
 BUFFER_SIZE = 4096
 
-NUMBER_OF_THREADS_TO_CANCEL_CONNECTION = 1
-NUMBER_OF_STARTED_CONNECTIONS_INIT_VALUE = 0
-NUMBER_OF_STARTED_GAMES_INIT_VALUE = 0
-NOT_NEED_OF_NEW_CONNECTIONS = 0
+# connection consts
+CONNECTION_IS_DEACTIVATED = False
+CONNECTION_IS_ACTIVE = True
 
-FREE = True
-BUSY = False
+NEW_CONNECTION = 1
+NO_CONNECTIONS = 0
+
+CLOSED_CONNECTION = 1
+
+CONNECTION_IS_SUCCESSFUL = b"OK"
+SERVER_IS_FULL = b"NO"
 
 GAME_NOT_TO_START = False
 GAME_TO_START = True
 
-EMPTY_PLACE_FOR_SOCKET = None
+NUMBER_OF_THREADS_TO_CANCEL_CONNECTION = 1
+NUMBER_OF_STARTED_CONNECTIONS_INIT_VALUE = 0
+NUMBER_OF_STARTED_GAMES_INIT_VALUE = 0
+
+FREE = True
+BUSY = False
+
+PLACE_FOR_SOCKET = None
+
+# client consts
+BACK_TO_CHAMPION_SELECT = "B"
+CHOSEN_CHAMPIONS_INFORMATION_REQUEST = "P"
+
+CHAMPION_IS_AVAILABLE = b"YES"
+CHAMPION_IS_NOT_AVAILABLE = b"NO"
+CHAMPION_IS_NOT_CHOSEN = -1
+
+CLIENT_QUIT = -1
+SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT = b"Q"
+SERVER_QUIT_SIGNAL_IN_LOBBY = [None, None, None]
+
+LOBBY = 0
+CONTINUE = 1
+BREAK = -1
 
 
 class Server:
@@ -61,11 +73,11 @@ class Server:
         self.server_status = SERVER_IS_RUNNING
 
         # clients' variables
-        self.client_sockets = np.array([EMPTY_PLACE_FOR_SOCKET for _ in range(MAX_PLAYERS)])
+        self.client_sockets = np.array([PLACE_FOR_SOCKET for _ in range(MAX_PLAYERS)])
 
         # variables for connections management
         self.number_of_started_connections = NUMBER_OF_STARTED_CONNECTIONS_INIT_VALUE
-        self.connections_needed_to_start = NOT_NEED_OF_NEW_CONNECTIONS
+        self.connections_needed_to_start = NO_CONNECTIONS
         self.number_of_started_games = NUMBER_OF_STARTED_GAMES_INIT_VALUE
         self.client_number = np.array([FREE for _ in range(MAX_PLAYERS)])
         self.game_to_start = np.array([GAME_NOT_TO_START for _ in range(MAX_PLAYERS)])
@@ -89,11 +101,11 @@ class Server:
         self.server_socket.close()
 
     def open_new_connections(self):
-        if self.connections_needed_to_start != NOT_NEED_OF_NEW_CONNECTIONS:
+        if self.connections_needed_to_start != NO_CONNECTIONS:
             for x in range(self.connections_needed_to_start):
                 threading.Thread(target=self.connect_client).start()
 
-            self.connections_needed_to_start = NOT_NEED_OF_NEW_CONNECTIONS
+            self.connections_needed_to_start = NO_CONNECTIONS
 
     def start_games(self):
         if self.number_of_started_connections > self.number_of_started_games:
@@ -131,38 +143,19 @@ class Server:
         connection = CONNECTION_IS_ACTIVE
         while connection:
             try:
-                chosen_champion = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
+                champion_select_result = self.champion_select(client_number)
 
-                if chosen_champion == CLIENT_QUIT:
-                    break
-
-                if self.server_status == SERVER_IS_CLOSING:
-                    self.client_sockets[client_number].sendall(QUIT_SIGNAL)
-                    break
-
-                if chosen_champion in self.chosen_champions:
-                    self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
+                if champion_select_result == CONTINUE:
                     continue
-                else:
-                    self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
-                    self.chosen_champions[client_number] = chosen_champion
+                elif champion_select_result == BREAK:
+                    break
 
                 while True:
-                    client_signal = self.client_sockets[client_number].recv(BUFFER_SIZE).decode()
-
-                    if self.server_status == SERVER_IS_CLOSING:
-                        self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT))
+                    lobby_result = self.lobby(client_number)
+                    if lobby_result == CONNECTION_IS_DEACTIVATED:
                         connection = CONNECTION_IS_DEACTIVATED
                         break
-
-                    if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
-                        self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
-                    elif client_signal == BACK_TO_CHAMPION_SELECT:
-                        self.chosen_champions[client_number] = -1
-                        break
-                    else:
-                        connection = CONNECTION_IS_DEACTIVATED
-                        self.chosen_champions[client_number] = -1
+                    elif lobby_result == BACK_TO_CHAMPION_SELECT:
                         break
 
             except ConnectionResetError:
@@ -174,6 +167,42 @@ class Server:
         self.number_of_started_games -= GAME_IS_ENDED
         self.client_sockets[client_number].close()
         sys.exit()
+
+    def champion_select(self, client_number):
+        chosen_champion = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
+
+        if chosen_champion == CLIENT_QUIT:
+            return BREAK
+
+        if self.server_status == SERVER_IS_CLOSING:
+            self.client_sockets[client_number].sendall(SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT)
+            return BREAK
+
+        if chosen_champion in self.chosen_champions:
+            self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
+            return CONTINUE
+
+        else:
+            self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
+            self.chosen_champions[client_number] = chosen_champion
+            return LOBBY
+
+    def lobby(self, client_number):
+        client_signal = self.client_sockets[client_number].recv(BUFFER_SIZE).decode()
+
+        if self.server_status == SERVER_IS_CLOSING:
+            self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+            return CONNECTION_IS_DEACTIVATED
+
+        if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
+            self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
+            return LOBBY
+        elif client_signal == BACK_TO_CHAMPION_SELECT:
+            self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
+            return BACK_TO_CHAMPION_SELECT
+        else:
+            self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
+            return CONNECTION_IS_DEACTIVATED
 
     def open_server_commands(self):
         while True:
