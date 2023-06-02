@@ -1,4 +1,5 @@
 from src.menu.Menu import Menu
+from src.menu.notification.Notification import Notification
 from src.menu.controls.Controls import Controls
 from src.menu.lobby.Lobby import Lobby
 from src.menu.champion_select.champion_select import ChampionSelect
