@@ -23,6 +23,7 @@ HOST_PORT = 6000
 SIZE_OF_RECV_WITH_POSITIONS = 1000
 
 OBSTACLE_GENERATE_DELAY = 2000
+FINISH_LINE_GENERATE_DELAY = 20 * 1000  # TODO change to 60 * 1000ms
 
 
 class Client:
@@ -35,15 +36,16 @@ class Client:
         self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player = create_player(PLAYER_POSITION_X, PLAYER_POSITION_Y, "spiderman")
         self.move = {
-                        "quit": False,
-                        "moving_left": False,
-                        "moving_right": False,
-                        "moving_up": False,
-                        "moving_down": False,
-                        "is_colliding": False
-                     }
+            "quit": False,
+            "moving_left": False,
+            "moving_right": False,
+            "moving_up": False,
+            "moving_down": False,
+            "is_colliding": False
+        }
         self.map = map.map.create_map(self.local_window.screen)
-        self.elapsed_time = 0
+        self.elapsed_time_from_last_obstacle_generation = 0
+        self.elapsed_total_time = 0
         self.obstacles = []
 
     def start_client(self):
@@ -90,12 +92,17 @@ class Client:
         pygame.quit()
 
     def timed_generate_obstacles(self, test_obstacles):
-        self.elapsed_time += self.local_window.clock.get_time()
-        if self.elapsed_time >= OBSTACLE_GENERATE_DELAY:
+        self.elapsed_time_from_last_obstacle_generation += self.local_window.clock.get_time()
+        self.elapsed_total_time += self.local_window.clock.get_time()
+
+        if self.elapsed_total_time >= FINISH_LINE_GENERATE_DELAY:
+            test_obstacles.add_obstacle(generate_finish_line=True)
+            self.elapsed_total_time = 0
+            self.elapsed_time_from_last_obstacle_generation = 0
+
+        if self.elapsed_time_from_last_obstacle_generation >= OBSTACLE_GENERATE_DELAY:
             test_obstacles.add_obstacle()
-            self.elapsed_time = 0
-
-
+            self.elapsed_time_from_last_obstacle_generation = 0
 
 
 
