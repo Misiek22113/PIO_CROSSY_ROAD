@@ -10,6 +10,7 @@ import pygame
 
 from src.player.local_window_player_movement import FPS, LocalWindowPlayerMovement, SCREEN_WIDTH, SCREEN_HEIGHT
 from src.player.player import create_player
+from src.game_simulation.test_obstacles import TestObstacles
 
 SERVER_QUIT = 2
 CLIENT_QUIT = 1
@@ -52,10 +53,14 @@ class Client:
             self.local_window.is_running = GAME_IS_CLOSING
             print("Server is offline.")
 
+        test_obstacle = TestObstacles()
+        test_obstacle.add_obstacle()
+
         while self.local_window.is_running:
             self.local_window.clock.tick(FPS)
             self.map.draw_scrolling_background()
             self.local_window.handle_events(self.move)
+            test_obstacle.handle_obstacles(self.local_window.screen)
             try:
                 self.server_socket.sendall(pickle.dumps(self.move))
                 positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
