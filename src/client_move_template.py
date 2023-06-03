@@ -37,7 +37,8 @@ class Client:
                         "moving_left": False,
                         "moving_right": False,
                         "moving_up": False,
-                        "moving_down": False
+                        "moving_down": False,
+                        "is_colliding": False
                      }
         self.map = map.map.create_map(self.local_window.screen)
 
@@ -57,6 +58,14 @@ class Client:
             self.map.draw_scrolling_background()
             self.local_window.handle_events(self.move)
             test_obstacle.handle_obstacles(self.local_window.screen)
+
+            for obstacle in test_obstacle.obstacles:
+                if self.player.rect.colliderect(obstacle.rect):
+                    self.move["is_colliding"] = True
+                    break
+                else:
+                    self.move["is_colliding"] = False
+
             try:
                 self.server_socket.sendall(pickle.dumps(self.move))
                 positions = pickle.loads(self.server_socket.recv(SIZE_OF_RECV_WITH_POSITIONS))
