@@ -23,7 +23,7 @@ class Player:
         self.rect.center = (x, y)
 
     def move(self, move):
-        if move["is_colliding"] and not move["moving_right"]:
+        if move["is_colliding_with_pushing"]:
             self.x -= SCROLL_SPEED
 
         if move["has_won"]:
