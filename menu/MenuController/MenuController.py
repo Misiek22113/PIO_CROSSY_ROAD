@@ -1,7 +1,8 @@
-from menu.Menu import Menu
-from menu.controls.Controls import Controls
-from menu.lobby.Lobby import Lobby
-from menu.champion_select.champion_select import ChampionSelect
+from src.menu.Menu import Menu
+from src.menu.notification.Notification import Notification
+from src.menu.controls.Controls import Controls
+from src.menu.lobby.Lobby import Lobby
+from src.menu.champion_select.champion_select import ChampionSelect
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
