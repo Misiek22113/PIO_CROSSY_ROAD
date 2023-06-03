@@ -1,13 +1,13 @@
 import pygame
 
-from src.map.map import SCROLL_SPEED
+# from src.map.map import SCROLL_SPEED
 
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
-
+SCROLL_SPEED = 2
 
 def create_player(x, y, picked_character):
-    player_img = pygame.image.load(f"player/assets/characters/{picked_character}/idle/0.png")
+    player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))
@@ -23,13 +23,13 @@ class Player:
         self.rect.center = (x, y)
 
     def move(self, move):
-        if move["is_colliding_with_pushing"]:
-            self.x -= SCROLL_SPEED
-
-        if move["has_won"]:
-            self.rect.x = self.x
-            self.rect.y = self.y
-            return
+        # if move["is_colliding_with_pushing"]:
+        #     self.x -= SCROLL_SPEED
+        #
+        # if move["has_won"]:
+        #     self.rect.x = self.x
+        #     self.rect.y = self.y
+        #     return
 
         if move["moving_left"]:
             self.x -= PLAYER_SPEED

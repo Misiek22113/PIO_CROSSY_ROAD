@@ -52,34 +52,42 @@ class Lobby(Window):
 
             try:
                 socket.sendall(CHOSEN_CHAMPIONS_INFORMATION_REQUEST)
-                chosen_champions = pickle.loads(socket.recv(28))
-            except ConnectionResetError:
+                chosen_champions = pickle.loads(socket.recv(4096))
+                start_game = pickle.loads(socket.recv(4096))
+            except (ConnectionResetError, ConnectionAbortedError):
                 socket.close()
-                return "menu"
+                return "lost_connection_with_server", None
 
             if chosen_champions[CHECK_CONNECTION] is None:
                 socket.close()
-                return "menu"
+                return "server_is_closed", None
 
             for player_number, chosen_champion in enumerate(chosen_champions):
                 if chosen_champion != PLAYER_IS_NOT_CONNECTED:
                     self.draw_player(240 + (PLAYER_POSITION_IN_LOBBY * player_number), 350, chosen_champion)
+
+            if start_game == 1:
+                champions_names = []
+                for chosen_champion in chosen_champions:
+                    champions_names.append(self.CHAMPIONS[chosen_champion][1])
+
+                return "game", champions_names
 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.LEAVE_BUTTON.check_for_input(self.LOBBY_MOUSE_POS):
                         try:
                             socket.sendall(BACK)
-                        except ConnectionResetError:
+                        except (ConnectionResetError, ConnectionAbortedError):
                             socket.close()
-                            return "menu"
+                            return "lost_connection_with_server", None
 
-                        return "champion_select"
+                        return "champion_select", None
 
                 if event.type == pygame.QUIT:
                     try:
                         socket.sendall(QUIT)
-                    except ConnectionResetError:
+                    except (ConnectionResetError, ConnectionAbortedError):
                         pass
 
                     socket.close()

@@ -6,6 +6,8 @@ import threading
 import numpy as np
 
 # server consts
+from src.player.player import create_player
+
 QUIT = "q"
 
 SERVER_IS_CLOSING = True
@@ -56,9 +58,11 @@ CLIENT_QUIT = -1
 SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT = b"Q"
 SERVER_QUIT_SIGNAL_IN_LOBBY = [None, None, None]
 
-LOBBY = 0
-CHAMPION_SELECT = 1
+LOBBY = 1
+CHAMPION_SELECT = 2
 LEFT_CHAMPION_SELECT = -1
+
+CHAMPIONS = ["cute_boy", "engineer", "frog", "girl", "spiderman", "student"]
 
 
 class Server:
@@ -84,6 +88,7 @@ class Server:
 
         # variables for game
         self.chosen_champions = [CHAMPION_IS_NOT_CHOSEN for _ in range(MAX_PLAYERS)]
+        self.players = [None, None, None]
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
@@ -141,6 +146,7 @@ class Server:
 
     def handle_client(self, client_number):
         connection = CONNECTION_IS_ACTIVE
+        game_start = 0
         while connection:
             try:
                 champion_select_result = self.champion_select(client_number)
@@ -157,8 +163,25 @@ class Server:
                         break
                     elif lobby_result == BACK_TO_CHAMPION_SELECT:
                         break
+                    elif lobby_result == 5:
+                        game_start = 1
+                        break
 
-            except ConnectionResetError:
+                if game_start:
+                    for x in range(3):
+                        self.players[x] = create_player(100, 200+(200*x), CHAMPIONS[self.chosen_champions[x]])
+
+                    while True:
+                        move = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
+                        self.players[client_number].move(move)
+                        to_send = []
+
+                        for player in self.players:
+                            to_send.append([player.rect.x, player.rect.y])
+
+                        self.client_sockets[client_number].send(pickle.dumps(to_send))
+
+            except (ConnectionResetError, ConnectionAbortedError):
                 break
 
         self.client_number[client_number] = FREE
@@ -192,11 +215,23 @@ class Server:
 
         if self.server_status == SERVER_IS_CLOSING:
             self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+            self.client_sockets[client_number].send(pickle.dumps(0))
             return CONNECTION_IS_DEACTIVATED
 
         if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
             self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
-            return LOBBY
+
+            count = 0
+            for champion in self.chosen_champions:
+                if champion == -1:
+                    count += 1
+
+            if count == 0:
+                self.client_sockets[client_number].send(pickle.dumps(1))
+                return 5
+            else:
+                self.client_sockets[client_number].send(pickle.dumps(0))
+                return LOBBY
         elif client_signal == BACK_TO_CHAMPION_SELECT:
             self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
             return BACK_TO_CHAMPION_SELECT
