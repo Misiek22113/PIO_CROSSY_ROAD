@@ -41,6 +41,7 @@ class Client:
             "moving_right": False,
             "moving_up": False,
             "moving_down": False,
+            "is_colliding_with_pushing": False,
             "is_colliding": False,
             "has_won": False
         }
@@ -73,6 +74,7 @@ class Client:
 
                     if obstacle.rect.x > self.player.rect.x:
                         self.move["moving_right"] = False
+                        self.move["is_colliding_with_pushing"] = True
                     elif obstacle.rect.x < self.player.rect.x:
                         self.move["moving_left"] = False
 
@@ -86,6 +88,7 @@ class Client:
                     break
                 else:
                     self.move["is_colliding"] = False
+                    self.move["is_colliding_with_pushing"] = False
 
             try:
                 self.server_socket.sendall(pickle.dumps(self.move))
