@@ -3,7 +3,7 @@ import socket
 import sys
 import threading
 
-from player.player import create_player
+from src.player.player import create_player
 
 PLAYER_IS_CLOSING = True
 
@@ -53,8 +53,8 @@ class Server:
             try:
                 move = pickle.loads(self.client_socket.recv(SIZE_OF_CLIENT_MESSAGE))
             except ConnectionResetError:
-               self.player_closing = PLAYER_IS_CLOSING
-               break
+                self.player_closing = PLAYER_IS_CLOSING
+                break
 
             if not move["quit"]:
                 self.player.move(move)
