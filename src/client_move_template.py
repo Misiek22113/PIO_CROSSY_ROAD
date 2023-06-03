@@ -70,6 +70,17 @@ class Client:
             for obstacle in test_obstacle.obstacles:
                 if self.player.rect.colliderect(obstacle.rect):
                     self.move["is_colliding"] = True
+
+                    if obstacle.rect.x > self.player.rect.x:
+                        self.move["moving_right"] = False
+                    elif obstacle.rect.x < self.player.rect.x:
+                        self.move["moving_left"] = False
+
+                    if obstacle.rect.y < self.player.rect.y:
+                        self.move["moving_up"] = False
+                    elif obstacle.rect.y > self.player.rect.y:
+                        self.move["moving_down"] = False
+
                     if obstacle.is_finish_line:
                         self.move["has_won"] = True
                     break
