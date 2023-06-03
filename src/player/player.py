@@ -1,5 +1,7 @@
 import pygame
 
+from src.map.map import SCROLL_SPEED
+
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
 
@@ -21,6 +23,10 @@ class Player:
         self.rect.center = (x, y)
 
     def move(self, move):
+        if move["is_colliding"]:
+            self.x -= SCROLL_SPEED
+            move["moving_right"] = False
+
         if move["moving_left"]:
             self.x -= PLAYER_SPEED
         if move["moving_right"]:
