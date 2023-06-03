@@ -22,6 +22,8 @@ HOST_PORT = 6000
 
 SIZE_OF_RECV_WITH_POSITIONS = 1000
 
+OBSTACLE_GENERATE_DELAY = 3000
+
 
 class Client:
 
@@ -41,6 +43,8 @@ class Client:
                         "is_colliding": False
                      }
         self.map = map.map.create_map(self.local_window.screen)
+        self.elapsed_time = 0
+        self.obstacles = []
 
     def start_client(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -51,12 +55,13 @@ class Client:
             print("Server is offline.")
 
         test_obstacle = TestObstacles()
-        test_obstacle.add_obstacle()
 
         while self.local_window.is_running:
             self.local_window.clock.tick(FPS)
             self.map.draw_scrolling_background()
             self.local_window.handle_events(self.move)
+
+            self.timed_generate_obstacles(test_obstacle)
             test_obstacle.handle_obstacles(self.local_window.screen)
 
             for obstacle in test_obstacle.obstacles:
@@ -83,6 +88,15 @@ class Client:
             pygame.display.update()
 
         pygame.quit()
+
+    def timed_generate_obstacles(self, test_obstacles):
+        self.elapsed_time += self.local_window.clock.get_time()
+        if self.elapsed_time >= OBSTACLE_GENERATE_DELAY:
+            test_obstacles.add_obstacle()
+            self.elapsed_time = 0
+
+
+
 
 
 # TODO delete later
