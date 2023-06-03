@@ -23,7 +23,7 @@ HOST_PORT = 6000
 SIZE_OF_RECV_WITH_POSITIONS = 1000
 
 OBSTACLE_GENERATE_DELAY = 2000
-FINISH_LINE_GENERATE_DELAY = 20 * 1000  # TODO change to 60 * 1000ms
+FINISH_LINE_GENERATE_DELAY = 6 * 1000  # TODO change to 60 * 1000ms
 
 
 class Client:
@@ -41,7 +41,8 @@ class Client:
             "moving_right": False,
             "moving_up": False,
             "moving_down": False,
-            "is_colliding": False
+            "is_colliding": False,
+            "has_won": False
         }
         self.map = map.map.create_map(self.local_window.screen)
         self.elapsed_time_from_last_obstacle_generation = 0
@@ -69,6 +70,8 @@ class Client:
             for obstacle in test_obstacle.obstacles:
                 if self.player.rect.colliderect(obstacle.rect):
                     self.move["is_colliding"] = True
+                    if obstacle.is_finish_line:
+                        self.move["has_won"] = True
                     break
                 else:
                     self.move["is_colliding"] = False
