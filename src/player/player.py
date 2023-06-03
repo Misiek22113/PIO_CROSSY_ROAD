@@ -27,6 +27,11 @@ class Player:
             self.x -= SCROLL_SPEED
             move["moving_right"] = False
 
+        if move["has_won"]:
+            self.rect.x = self.x
+            self.rect.y = self.y
+            return
+
         if move["moving_left"]:
             self.x -= PLAYER_SPEED
         if move["moving_right"]:
