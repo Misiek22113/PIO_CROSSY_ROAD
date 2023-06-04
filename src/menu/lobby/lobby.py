@@ -7,15 +7,10 @@ from src.menu.window.window import Window
 from src.menu.button.button import Button
 
 PLAYER_Y = 350
-
 PLAYER_X = 240
-
 CHAMPION_NAME = 1
-
 GAME_IS_STARTED = 1
-
 BUFFER_SIZE = 4096
-
 CHOSEN_CHAMPIONS_INFORMATION_REQUEST = b"P"
 CHECK_CONNECTION = 0
 QUIT = b"Q"
