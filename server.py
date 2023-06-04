@@ -88,7 +88,7 @@ PLAYER_LOSE_SIGNAL = [9, 9]
 QUIT_SIGNAL_IN_GAME = (8, 8, 8)
 
 PLAYER_POSITION_Y = 200
-STARTING_Y = 200
+STARTING_Y = 300
 STARTING_X = 100
 NO_PLAYER_CREATE = [None, None, None]
 
@@ -299,17 +299,23 @@ class Server:
                     time.sleep(FRAME_TIME)
                 return
 
-            self.handle_move(move, client_number)
+            obstacles_names, obstacles_positions = self.handle_move(move, client_number)
             end_game_result = self.handle_end_game(move, client_number)
             if end_game_result == GAME_IS_ENDED:
                 break
 
-            result_send_info_to_player = self.send_info_to_player(client_number)
+            result_send_info_to_player = self.send_info_to_player(client_number, obstacles_names, obstacles_positions)
 
             if result_send_info_to_player == QUIT:
                 return
 
     def handle_move(self, move, client_number):
+        obstacles_names = self.test_obstacles.names
+        obstacles_positions = []
+
+        for obstacle in self.test_obstacles.obstacles:
+            obstacles_positions.append([obstacle.x, obstacle.y])
+
         for obstacle in self.test_obstacles.obstacles:
             if self.players[client_number].rect.colliderect(obstacle.rect):
                 move["is_colliding"] = True
@@ -333,6 +339,7 @@ class Server:
                 move["is_colliding_with_pushing"] = False
 
         self.players[client_number].move(move)
+        return obstacles_names, obstacles_positions
 
     def handle_end_game(self, move, client_number):
         if self.game_is_ended == GAME_IS_ENDED:
@@ -354,7 +361,7 @@ class Server:
 
         return GAME_IS_GOING
 
-    def send_info_to_player(self, client_number):
+    def send_info_to_player(self, client_number, obstacles_names, obstacles_positions):
         if self.server_status == SERVER_IS_CLOSING:
             self.client_sockets[client_number].send(pickle.dumps(QUIT_SIGNAL_IN_GAME))
             self.game_is_started = GAME_IS_NOT_STARTED
@@ -362,13 +369,7 @@ class Server:
 
         player_positions = []
         for player in self.players:
-            player_positions.append([player.rect.x, player.rect.y])
-
-        obstacles_names = self.test_obstacles.names
-        obstacles_positions = []
-
-        for obstacle in self.test_obstacles.obstacles:
-            obstacles_positions.append([obstacle.rect.x, obstacle.rect.y])
+            player_positions.append([player.x, player.y])
 
         try:
             self.client_sockets[client_number].send(
