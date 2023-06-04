@@ -10,7 +10,6 @@ from src.game_simulation.test_obstacles import TestObstacles
 from src.player.player import create_player
 
 # server consts
-GAME_IS_NOT_ENDED = False
 QUIT = "q"
 
 SERVER_IS_CLOSING = True
@@ -67,10 +66,9 @@ LEFT_CHAMPION_SELECT = -1
 CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
 START_GAME = 5
 
-OBSTACLE_GENERATE_DELAY = 2
-FINISH_LINE_GENERATE_DELAY = 5  # TODO change to 60s
+OBSTACLE_GENERATE_DELAY = 4
+FINISH_LINE_GENERATE_DELAY = 60
 SECOND = 1
-COUNTER_TIME = 1
 COUNTING_START = 0
 WAIT_FOR_ANOTHER_CHECK = 1
 FRAME_TIME = 1 / 60
@@ -78,6 +76,7 @@ FRAME_TIME = 1 / 60
 GAME_IS_GOING = 0
 GAME_IS_NOT_STARTED = False
 GAME_IS_STARTED = True
+
 START_GAME_SIGNAL = 1
 WAIT_SIGNAL = 0
 
@@ -207,7 +206,7 @@ class Server:
                     break
 
             if game_start:
-                self.game_is_ended = GAME_IS_NOT_ENDED
+                self.game_is_ended = GAME_IS_GOING
                 self.game(client_number)
                 connection = CONNECTION_IS_DEACTIVATED
 
@@ -307,7 +306,7 @@ class Server:
 
             result_send_info_to_player = self.send_info_to_player(client_number)
 
-            if result_send_info_to_player == "QUIT":
+            if result_send_info_to_player == QUIT:
                 return
 
     def handle_move(self, move, client_number):
@@ -386,7 +385,7 @@ class Server:
             self.elapsed_total_time = COUNTING_START
             self.elapsed_time_from_last_obstacle_generation = COUNTING_START
             time.sleep(WAIT_FOR_ANOTHER_CHECK)
-            while self.game_is_ended == GAME_IS_NOT_ENDED:
+            while self.game_is_ended == GAME_IS_GOING:
                 if self.elapsed_total_time >= FINISH_LINE_GENERATE_DELAY:
                     self.test_obstacles.add_obstacle(generate_finish_line=True)
                     self.elapsed_total_time = COUNTING_START
@@ -399,11 +398,11 @@ class Server:
                 self.test_obstacles.handle_obstacles()
                 self.elapsed_total_time += SECOND
                 self.elapsed_time_from_last_obstacle_generation += SECOND
-                time.sleep(COUNTER_TIME)
+                time.sleep(SECOND)
 
     def move_obstacles(self):
         while self.server_status == SERVER_IS_RUNNING:
-            while self.game_is_ended == GAME_IS_NOT_ENDED:
+            while self.game_is_ended == GAME_IS_GOING:
                 self.test_obstacles.handle_obstacles()
                 time.sleep(FRAME_TIME)
             time.sleep(WAIT_FOR_ANOTHER_CHECK)
