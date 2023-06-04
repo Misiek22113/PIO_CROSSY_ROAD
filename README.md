@@ -13,3 +13,16 @@
 **Warunek przegranej:** Gracz wchodzi w kolizje z przeszkodą, która powoduje automatyczną przegraną lub nie dotarcie do mety w momencie, kiedy inny gracz do niej dotarł lub pierwszy gracz ma zbyt dużą przewagę względem gracza ostatniego, wtedy ostatni gracz przegrywa.
 
 **Warunek braku zwycięzcy:**  Każdy z graczy przegrał przed dotarciem do mety.
+
+# Środowisko
+
+Do działania potrzebny jest python 3.10.11.
+
+Potrzebne biblioteki można zainstalować poprzez odpalenie cmd w głównym folderze gry i wpisanie komendy:
+
+pip install -r requirements.txt
+
+# Uruchomienie gry
+
+Na początku uruchamiamy server.py. Następnie możemy uruchomić client.py. Żeby gra została uruchomiona, potrzebne są 3 osoby w lobby, dlatego client musi być odpalony 3 razy.
+
