@@ -9,11 +9,7 @@ from src.player.local_window_player_movement import LocalWindowPlayerMovement, S
 
 import math
 
-SCROLL_SPEED = 2
-
-
-def create_map(screen):
-    return Map(screen)
+SCROLL_SPEED = 3
 
 
 class Map(Window):
@@ -61,9 +57,11 @@ class Map(Window):
             if isinstance(positions, int):
                 server_socket.close()
                 if positions == 10:
-                    return "menu"
+                    return "win", obstacles_xy
+                elif positions == 9:
+                    return "lost", obstacles_xy
                 else:
-                    return "menu"
+                    return "server_is_closed", None
 
             for client_number, position in enumerate(positions):
                 self.players[client_number].set_xy(position)

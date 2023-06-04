@@ -2,6 +2,7 @@ import socket
 import pygame
 
 from src.map.map import Map
+from src.menu.end_game_result.end_game_result import EndGameResult
 from src.menu.menu import Menu
 from src.menu.controls.controls import Controls
 from src.menu.lobby.lobby import Lobby
@@ -64,7 +65,11 @@ class MenuController:
                 actual = self.champion_is_picked.handle_notification_loop()
             elif actual == "game":
                 self.map = Map(SCREEN_WIDTH, SCREEN_HEIGHT, players)
-                actual = self.map.handle_map_loop(server_socket)
+                actual, champion = self.map.handle_map_loop(server_socket)
+            elif actual == "lost":
+                lost_screen = EndGameResult("lost", champion, False)
+            elif actual == "win":
+                win_screen = EndGameResult("win", champion, True)
 
     def connect_to_server(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

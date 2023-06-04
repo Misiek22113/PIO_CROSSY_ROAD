@@ -84,8 +84,9 @@ WAIT_SIGNAL = 0
 EVERY_PLAYER_CONNECTED = MAX_PLAYERS
 PLAYER_IS_NOT_IN_LOBBY = 1
 
-PLAYER_WIN_SIGNAL = (10, 10, 10)
-PLAYER_LOSE_SIGNAL = (9, 9, 9)
+PLAYER_WIN_SIGNAL = [10, 10]
+PLAYER_LOSE_SIGNAL = [9, 9]
+QUIT_SIGNAL_IN_GAME = (8, 8, 8)
 
 PLAYER_POSITION_Y = 200
 STARTING_Y = 200
@@ -282,9 +283,11 @@ class Server:
             try:
                 move = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
             except (ConnectionResetError, ConnectionAbortedError):
-                move = "quit"
+                move = {"quit": True}
+            except EOFError:
+                return
 
-            if move["quit"] or move == "quit":
+            if move["quit"]:
                 move["moving_right"] = False
                 move["moving_left"] = True
                 move["moving_up"] = False
@@ -301,7 +304,10 @@ class Server:
                 self.game_is_started = GAME_IS_NOT_STARTED
                 break
 
-            self.send_info_to_player(client_number)
+            result_send_info_to_player = self.send_info_to_player(client_number)
+
+            if result_send_info_to_player == "QUIT":
+                return
 
     def handle_move(self, move, client_number):
         for obstacle in self.test_obstacles.obstacles:
@@ -331,7 +337,8 @@ class Server:
     def handle_end_game(self, move, client_number):
         if self.game_is_ended:
             try:
-                self.client_sockets[client_number].send(pickle.dumps(PLAYER_LOSE_SIGNAL))
+                self.client_sockets[client_number].send(
+                    pickle.dumps((*PLAYER_LOSE_SIGNAL, self.chosen_champions[client_number])))
             except (ConnectionResetError, ConnectionAbortedError):
                 pass
             return GAME_IS_ENDED
@@ -339,7 +346,8 @@ class Server:
         if move["has_won"]:
             self.game_is_started = GAME_IS_NOT_STARTED
             try:
-                self.client_sockets[client_number].send(pickle.dumps(PLAYER_WIN_SIGNAL))
+                self.client_sockets[client_number].send(
+                    pickle.dumps((*PLAYER_WIN_SIGNAL, self.chosen_champions[client_number])))
             except (ConnectionResetError, ConnectionAbortedError):
                 pass
             return GAME_IS_ENDED
@@ -347,6 +355,11 @@ class Server:
         return GAME_IS_GOING
 
     def send_info_to_player(self, client_number):
+        if self.server_status == SERVER_IS_CLOSING:
+            self.client_sockets[client_number].send(pickle.dumps(QUIT_SIGNAL_IN_GAME))
+            self.game_is_started = GAME_IS_NOT_STARTED
+            return QUIT
+
         player_positions = []
         for player in self.players:
             player_positions.append([player.rect.x, player.rect.y])
@@ -363,8 +376,10 @@ class Server:
         except (ConnectionResetError, ConnectionAbortedError):
             pass
 
+        return None
+
     def timed_generate_obstacles(self):
-        while True:
+        while self.server_status == SERVER_IS_RUNNING:
             time.sleep(WAIT_FOR_ANOTHER_CHECK)
             while self.game_is_started:
                 if self.elapsed_total_time >= FINISH_LINE_GENERATE_DELAY:
