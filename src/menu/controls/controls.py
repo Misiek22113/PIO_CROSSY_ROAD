@@ -31,13 +31,13 @@ class Controls(Window):
         self.KEY_ARROW = pygame.image.load("assets/controls/key_arrow.png")
 
     def print_controls(self):
-        key_rect = self.KEY_W.get_rect(center=(640, 450))
+        key_rect = self.KEY_W.get_rect(center=(690, 450))
         self.screen.blit(self.KEY_W, key_rect)
-        key_rect = self.KEY_A.get_rect(center=(490, 600))
+        key_rect = self.KEY_A.get_rect(center=(530, 600))
         self.screen.blit(self.KEY_A, key_rect)
-        key_rect = self.KEY_S.get_rect(center=(640, 600))
+        key_rect = self.KEY_S.get_rect(center=(690, 600))
         self.screen.blit(self.KEY_S, key_rect)
-        key_rect = self.KEY_D.get_rect(center=(790, 600))
+        key_rect = self.KEY_D.get_rect(center=(840, 600))
         self.screen.blit(self.KEY_D, key_rect)
 
     def print_controls_menu(self):
