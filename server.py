@@ -68,7 +68,7 @@ CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
 START_GAME = 5
 
 OBSTACLE_GENERATE_DELAY = 2
-FINISH_LINE_GENERATE_DELAY = 10  # TODO change to 60s
+FINISH_LINE_GENERATE_DELAY = 5  # TODO change to 60s
 SECOND = 1
 COUNTER_TIME = 1
 COUNTING_START = 0
@@ -125,7 +125,7 @@ class Server:
         self.test_obstacles = TestObstacles()
 
         self.game_is_started = GAME_IS_NOT_STARTED
-        self.game_is_ended = GAME_IS_NOT_ENDED
+        self.game_is_ended = GAME_IS_ENDED
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
@@ -207,6 +207,7 @@ class Server:
                     break
 
             if game_start:
+                self.game_is_ended = GAME_IS_NOT_ENDED
                 self.game(client_number)
                 connection = CONNECTION_IS_DEACTIVATED
 
@@ -216,6 +217,7 @@ class Server:
         self.number_of_started_games -= GAME_IS_ENDED
         self.client_sockets[client_number].close()
         self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
+        self.game_is_ended = GAME_IS_ENDED
         sys.exit()
 
     def champion_select(self, client_number):
@@ -301,7 +303,6 @@ class Server:
             self.handle_move(move, client_number)
             end_game_result = self.handle_end_game(move, client_number)
             if end_game_result == GAME_IS_ENDED:
-                self.game_is_started = GAME_IS_NOT_STARTED
                 break
 
             result_send_info_to_player = self.send_info_to_player(client_number)
@@ -335,7 +336,7 @@ class Server:
         self.players[client_number].move(move)
 
     def handle_end_game(self, move, client_number):
-        if self.game_is_ended:
+        if self.game_is_ended == GAME_IS_ENDED:
             try:
                 self.client_sockets[client_number].send(
                     pickle.dumps((*PLAYER_LOSE_SIGNAL, self.chosen_champions[client_number])))
@@ -344,7 +345,7 @@ class Server:
             return GAME_IS_ENDED
 
         if move["has_won"]:
-            self.game_is_started = GAME_IS_NOT_STARTED
+            self.game_is_ended = GAME_IS_ENDED
             try:
                 self.client_sockets[client_number].send(
                     pickle.dumps((*PLAYER_WIN_SIGNAL, self.chosen_champions[client_number])))
@@ -380,13 +381,16 @@ class Server:
 
     def timed_generate_obstacles(self):
         while self.server_status == SERVER_IS_RUNNING:
+            self.test_obstacles.obstacles = []
+            self.test_obstacles.names = []
+            self.elapsed_total_time = COUNTING_START
+            self.elapsed_time_from_last_obstacle_generation = COUNTING_START
             time.sleep(WAIT_FOR_ANOTHER_CHECK)
-            while self.game_is_started:
+            while self.game_is_ended == GAME_IS_NOT_ENDED:
                 if self.elapsed_total_time >= FINISH_LINE_GENERATE_DELAY:
                     self.test_obstacles.add_obstacle(generate_finish_line=True)
                     self.elapsed_total_time = COUNTING_START
                     self.elapsed_time_from_last_obstacle_generation = COUNTING_START
-                    return
 
                 if self.elapsed_time_from_last_obstacle_generation >= OBSTACLE_GENERATE_DELAY:
                     self.test_obstacles.add_obstacle()
@@ -396,11 +400,10 @@ class Server:
                 self.elapsed_total_time += SECOND
                 self.elapsed_time_from_last_obstacle_generation += SECOND
                 time.sleep(COUNTER_TIME)
-            self.test_obstacles.obstacles = []
 
     def move_obstacles(self):
         while self.server_status == SERVER_IS_RUNNING:
-            while self.game_is_started:
+            while self.game_is_ended == GAME_IS_NOT_ENDED:
                 self.test_obstacles.handle_obstacles()
                 time.sleep(FRAME_TIME)
             time.sleep(WAIT_FOR_ANOTHER_CHECK)

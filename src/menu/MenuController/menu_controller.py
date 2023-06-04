@@ -67,9 +67,9 @@ class MenuController:
                 self.map = Map(SCREEN_WIDTH, SCREEN_HEIGHT, players)
                 actual, champion = self.map.handle_map_loop(server_socket)
             elif actual == "lost":
-                lost_screen = EndGameResult("lost", champion, False)
+                actual = EndGameResult("lost", champion, False).handle_end_game_result_loop()
             elif actual == "win":
-                win_screen = EndGameResult("win", champion, True)
+                actual = EndGameResult("win", champion, True).handle_end_game_result_loop()
 
     def connect_to_server(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

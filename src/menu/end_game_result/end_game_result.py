@@ -1,7 +1,8 @@
 import sys
 import pygame
-from menu.button.Button import Button
+from src.menu.button.button import Button
 from src.menu.window.window import Window
+
 
 class EndGameResult(Window):
 
@@ -49,7 +50,6 @@ class EndGameResult(Window):
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.EXIT_BUTTON.check_for_input(self.MENU_MOUSE_POS):
                         return "menu"
-
 
             pygame.display.update()
 

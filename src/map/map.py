@@ -32,7 +32,7 @@ class Map(Window):
             "is_colliding": False,
             "has_won": False
         }
-        self.obstacles = TestObstacles()
+        self.obstacles = None
 
     def draw_scrolling_background(self):
         self.scroll -= SCROLL_SPEED
@@ -42,6 +42,7 @@ class Map(Window):
             self.scroll = 0
 
     def handle_map_loop(self, server_socket):
+        self.obstacles = TestObstacles()
         while True:
             self.draw_scrolling_background()
             self.local_window.handle_events(self.move)
@@ -52,7 +53,10 @@ class Map(Window):
                 server_socket.close()
                 pygame.quit()
 
-            positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(4096))
+            try:
+                positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(4096))
+            except (ConnectionResetError, ConnectionAbortedError):
+                return "lost_connection_with_server", None
 
             if isinstance(positions, int):
                 server_socket.close()
