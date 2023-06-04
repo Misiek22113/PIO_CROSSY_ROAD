@@ -6,6 +6,16 @@ import pygame
 from src.menu.window.window import Window
 from src.menu.button.button import Button
 
+PLAYER_Y = 350
+
+PLAYER_X = 240
+
+CHAMPION_NAME = 1
+
+GAME_IS_STARTED = 1
+
+BUFFER_SIZE = 4096
+
 CHOSEN_CHAMPIONS_INFORMATION_REQUEST = b"P"
 CHECK_CONNECTION = 0
 QUIT = b"Q"
@@ -52,8 +62,8 @@ class Lobby(Window):
 
             try:
                 socket.sendall(CHOSEN_CHAMPIONS_INFORMATION_REQUEST)
-                chosen_champions = pickle.loads(socket.recv(4096))
-                start_game = pickle.loads(socket.recv(4096))
+                chosen_champions = pickle.loads(socket.recv(BUFFER_SIZE))
+                start_game = pickle.loads(socket.recv(BUFFER_SIZE))
             except (ConnectionResetError, ConnectionAbortedError):
                 socket.close()
                 return "lost_connection_with_server", None
@@ -64,12 +74,12 @@ class Lobby(Window):
 
             for player_number, chosen_champion in enumerate(chosen_champions):
                 if chosen_champion != PLAYER_IS_NOT_CONNECTED:
-                    self.draw_player(240 + (PLAYER_POSITION_IN_LOBBY * player_number), 350, chosen_champion)
+                    self.draw_player(PLAYER_X + (PLAYER_POSITION_IN_LOBBY * player_number), PLAYER_Y, chosen_champion)
 
-            if start_game == 1:
+            if start_game == GAME_IS_STARTED:
                 champions_names = []
                 for chosen_champion in chosen_champions:
-                    champions_names.append(self.CHAMPIONS[chosen_champion][1])
+                    champions_names.append(self.CHAMPIONS[chosen_champion][CHAMPION_NAME])
 
                 return "game", champions_names
 

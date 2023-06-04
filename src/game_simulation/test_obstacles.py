@@ -6,7 +6,7 @@ from src.obstacles.obstacle import create_obstacle, Obstacle
 
 OBSTACLE_Y_GENERATION_LOWER_BOUND = 250
 OBSTACLE_Y_GENERATION_UPPER_BOUND = 700
-SCROLL_SPEED = 2
+SCROLL_SPEED = 3
 FINISH_LINE_Y_OFFSET = 532.91
 
 

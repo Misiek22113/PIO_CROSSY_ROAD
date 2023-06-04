@@ -27,11 +27,15 @@ class Map(Window):
         self.players = [create_player(100, 200, player_skins[0]), create_player(100, 400, player_skins[1]), create_player(100, 600, player_skins[2])]
         self.scroll = 0
         self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT, self.screen)
-        self.move = self.move = {
+        self.move = {
+            "quit": False,
             "moving_left": False,
             "moving_right": False,
             "moving_up": False,
-            "moving_down": False
+            "moving_down": False,
+            "is_colliding_with_pushing": False,
+            "is_colliding": False,
+            "has_won": False
         }
         self.obstacles = TestObstacles()
 
@@ -48,7 +52,19 @@ class Map(Window):
             self.local_window.handle_events(self.move)
 
             server_socket.sendall(pickle.dumps(self.move))
+
+            if self.move["quit"]:
+                server_socket.close()
+                pygame.quit()
+
             positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(4096))
+
+            if isinstance(positions, int):
+                server_socket.close()
+                if positions == 10:
+                    return "menu"
+                else:
+                    return "menu"
 
             for client_number, position in enumerate(positions):
                 self.players[client_number].set_xy(position)

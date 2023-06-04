@@ -4,7 +4,7 @@ import pygame
 
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
-SCROLL_SPEED = 2
+SCROLL_SPEED = 3
 
 def create_player(x, y, picked_character):
     player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
@@ -23,13 +23,13 @@ class Player:
         self.rect.center = (x, y)
 
     def move(self, move):
-        # if move["is_colliding_with_pushing"]:
-        #     self.x -= SCROLL_SPEED
-        #
-        # if move["has_won"]:
-        #     self.rect.x = self.x
-        #     self.rect.y = self.y
-        #     return
+        if move["is_colliding_with_pushing"]:
+            self.x -= SCROLL_SPEED
+
+        if move["has_won"]:
+            self.rect.x = self.x
+            self.rect.y = self.y
+            return
 
         if move["moving_left"]:
             self.x -= PLAYER_SPEED
