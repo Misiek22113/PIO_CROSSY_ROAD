@@ -4,9 +4,12 @@ import random
 
 from src.obstacles.obstacle import create_obstacle, Obstacle
 
+Y = 1
+X = 0
+
 OBSTACLE_Y_GENERATION_LOWER_BOUND = 250
 OBSTACLE_Y_GENERATION_UPPER_BOUND = 700
-SCROLL_SPEED = 3
+SCROLL_SPEED = 4
 FINISH_LINE_Y_OFFSET = 532.91
 
 
@@ -38,9 +41,9 @@ class TestObstacles:
 
         for index, name in enumerate(names):
             if name == "+finish_line":
-                self.obstacles.append(create_obstacle(name, xy[index][0], FINISH_LINE_Y_OFFSET))
+                self.obstacles.append(create_obstacle(name, xy[index][X], FINISH_LINE_Y_OFFSET))
             else:
-                self.obstacles.append(create_obstacle(name, xy[index][0], xy[index][1]))
+                self.obstacles.append(create_obstacle(name, xy[index][X], xy[index][Y]))
 
     def print_obstacles(self, screen):
         for obst in self.obstacles:

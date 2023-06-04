@@ -9,7 +9,23 @@ from src.player.local_window_player_movement import LocalWindowPlayerMovement, S
 
 import math
 
+BUFFER_SIZE = 4096
+
+LOST = 9
+WIN = 10
+
+EMPTY_OBSTACLES = None
+
+INIT_SCROLL = 0
 SCROLL_SPEED = 3
+
+FIRST_PLAYER_POSITION = [100, 200]
+SECOND_PLAYER_POSITION = [100, 400]
+THIRD_PLAYER_POSITION = [100, 600]
+
+FIRST_PLAYER = 0
+SECOND_PLAYER = 1
+THIRD_PLAYER = 2
 
 
 class Map(Window):
@@ -18,9 +34,10 @@ class Map(Window):
         self.background_img = pygame.image.load("src/map/assets/background.png").convert()
         self.background_width = self.background_img.get_width()
         self.tiles = math.ceil(self.background_width / SCREEN_WIDTH) + 1
-        self.players = [create_player(100, 200, player_skins[0]),
-                        create_player(100, 400, player_skins[1]), create_player(100, 600, player_skins[2])]
-        self.scroll = 0
+        self.players = [create_player(*FIRST_PLAYER_POSITION, player_skins[FIRST_PLAYER]),
+                        create_player(*SECOND_PLAYER_POSITION, player_skins[SECOND_PLAYER]),
+                        create_player(*THIRD_PLAYER_POSITION, player_skins[THIRD_PLAYER])]
+        self.scroll = INIT_SCROLL
         self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT, self.screen)
         self.move = {
             "quit": False,
@@ -32,7 +49,7 @@ class Map(Window):
             "is_colliding": False,
             "has_won": False
         }
-        self.obstacles = None
+        self.obstacles = EMPTY_OBSTACLES
 
     def draw_scrolling_background(self):
         self.scroll -= SCROLL_SPEED
@@ -54,15 +71,15 @@ class Map(Window):
                 pygame.quit()
 
             try:
-                positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(4096))
+                positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(BUFFER_SIZE))
             except (ConnectionResetError, ConnectionAbortedError):
                 return "lost_connection_with_server", None
 
             if isinstance(positions, int):
                 server_socket.close()
-                if positions == 10:
+                if positions == WIN:
                     return "win", obstacles_xy
-                elif positions == 9:
+                elif positions == LOST:
                     return "lost", obstacles_xy
                 else:
                     return "server_is_closed", None
