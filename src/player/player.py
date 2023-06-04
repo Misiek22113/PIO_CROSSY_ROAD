@@ -1,6 +1,7 @@
 import pygame
 
-# from src.map.map import SCROLL_SPEED
+Y = 1
+X = 0
 
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
@@ -27,8 +28,7 @@ class Player:
             self.x -= SCROLL_SPEED
 
         if move["has_won"]:
-            self.rect.x = self.x
-            self.rect.y = self.y
+            self.rect.center = (self.x, self.y)
             return
 
         if move["moving_left"]:
@@ -39,12 +39,11 @@ class Player:
             self.y += PLAYER_SPEED
         if move["moving_up"]:
             self.y -= PLAYER_SPEED
-        self.rect.x = self.x
-        self.rect.y = self.y
+
+        self.rect.center = (self.x, self.y)
 
     def set_xy(self, xy):
-        self.rect.x = xy[0]
-        self.rect.y = xy[1]
+        self.rect.center = (xy[X], xy[Y])
 
     def print_player(self, local_window):
         local_window.screen.blit(self.skin, self.rect)
