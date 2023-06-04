@@ -1,4 +1,5 @@
 import socket
+import pygame
 
 from src.map.map import Map
 from src.menu.menu import Menu
@@ -12,6 +13,10 @@ SCREEN_HEIGHT = 720
 BUFFER_SIZE = 4096
 SERVER_IS_FULL = "NO"
 
+pygame.mixer.init()
+pygame.mixer.music.load("src/menu/utils/menu_theme_song.mp3")
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.01)
 
 class MenuController:
 
