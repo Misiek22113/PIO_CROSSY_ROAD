@@ -1,6 +1,6 @@
 import sys
 import pygame
-from src.menu.button.Button import Button
+from src.menu.button.button import Button
 from src.menu.window.window import Window
 
 EMPTY_BUTTON = None

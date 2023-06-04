@@ -2,10 +2,15 @@ import pickle
 import socket
 import sys
 import threading
+import time
 
 import numpy as np
 
+from src.game_simulation.test_obstacles import TestObstacles
+from src.player.player import create_player
+
 # server consts
+GAME_IS_NOT_ENDED = False
 QUIT = "q"
 
 SERVER_IS_CLOSING = True
@@ -56,9 +61,38 @@ CLIENT_QUIT = -1
 SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT = b"Q"
 SERVER_QUIT_SIGNAL_IN_LOBBY = [None, None, None]
 
-LOBBY = 0
-CHAMPION_SELECT = 1
+LOBBY = 1
+CHAMPION_SELECT = 2
 LEFT_CHAMPION_SELECT = -1
+CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
+START_GAME = 5
+
+OBSTACLE_GENERATE_DELAY = 2
+FINISH_LINE_GENERATE_DELAY = 10  # TODO change to 60s
+SECOND = 1
+COUNTER_TIME = 1
+COUNTING_START = 0
+WAIT_FOR_ANOTHER_CHECK = 1
+FRAME_TIME = 1 / 60
+
+GAME_IS_GOING = 0
+GAME_IS_NOT_STARTED = False
+GAME_IS_STARTED = True
+START_GAME_SIGNAL = 1
+WAIT_SIGNAL = 0
+
+EVERY_PLAYER_CONNECTED = MAX_PLAYERS
+PLAYER_IS_NOT_IN_LOBBY = 1
+
+PLAYER_WIN_SIGNAL = (10, 10, 10)
+PLAYER_LOSE_SIGNAL = (9, 9, 9)
+
+PLAYER_POSITION_Y = 200
+STARTING_Y = 200
+STARTING_X = 100
+NO_PLAYER_CREATE = [None, None, None]
+
+CHAMPIONS = ["cute_boy", "engineer", "frog", "girl", "spiderman", "student"]
 
 
 class Server:
@@ -84,9 +118,18 @@ class Server:
 
         # variables for game
         self.chosen_champions = [CHAMPION_IS_NOT_CHOSEN for _ in range(MAX_PLAYERS)]
+        self.players = NO_PLAYER_CREATE
+        self.elapsed_time_from_last_obstacle_generation = COUNTING_START
+        self.elapsed_total_time = COUNTING_START
+        self.test_obstacles = TestObstacles()
+
+        self.game_is_started = GAME_IS_NOT_STARTED
+        self.game_is_ended = GAME_IS_NOT_ENDED
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
+        threading.Thread(target=self.move_obstacles).start()
+        threading.Thread(target=self.timed_generate_obstacles).start()
 
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
             threading.Thread(target=self.connect_client).start()
@@ -141,68 +184,211 @@ class Server:
 
     def handle_client(self, client_number):
         connection = CONNECTION_IS_ACTIVE
-        while connection:
-            try:
-                champion_select_result = self.champion_select(client_number)
+        game_start = GAME_IS_NOT_STARTED
 
-                if champion_select_result == CHAMPION_SELECT:
-                    continue
-                elif champion_select_result == LEFT_CHAMPION_SELECT:
+        while connection:
+            champion_select_result = self.champion_select(client_number)
+
+            if champion_select_result == CHAMPION_SELECT:
+                continue
+            elif champion_select_result == LEFT_CHAMPION_SELECT:
+                break
+
+            while True:
+                lobby_result = self.lobby(client_number)
+                if lobby_result == CONNECTION_IS_DEACTIVATED:
+                    connection = CONNECTION_IS_DEACTIVATED
+                    break
+                elif lobby_result == BACK_TO_CHAMPION_SELECT:
+                    break
+                elif lobby_result == START_GAME:
+                    game_start = GAME_IS_STARTED
                     break
 
-                while True:
-                    lobby_result = self.lobby(client_number)
-                    if lobby_result == CONNECTION_IS_DEACTIVATED:
-                        connection = CONNECTION_IS_DEACTIVATED
-                        break
-                    elif lobby_result == BACK_TO_CHAMPION_SELECT:
-                        break
-
-            except ConnectionResetError:
-                break
+            if game_start:
+                self.game(client_number)
+                connection = CONNECTION_IS_DEACTIVATED
 
         self.client_number[client_number] = FREE
         self.connections_needed_to_start += CLOSED_CONNECTION
         self.number_of_started_connections -= CLOSED_CONNECTION
         self.number_of_started_games -= GAME_IS_ENDED
         self.client_sockets[client_number].close()
+        self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
         sys.exit()
 
     def champion_select(self, client_number):
-        chosen_champion = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
+        try:
+            chosen_champion = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
 
-        if chosen_champion == CLIENT_QUIT:
+            if chosen_champion == CLIENT_QUIT:
+                return LEFT_CHAMPION_SELECT
+
+            if self.server_status == SERVER_IS_CLOSING:
+                self.client_sockets[client_number].sendall(SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT)
+                return LEFT_CHAMPION_SELECT
+
+            if chosen_champion in self.chosen_champions:
+                self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
+                return CHAMPION_SELECT
+
+            else:
+                self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
+                self.chosen_champions[client_number] = chosen_champion
+                return LOBBY
+        except (ConnectionResetError, ConnectionAbortedError):
             return LEFT_CHAMPION_SELECT
-
-        if self.server_status == SERVER_IS_CLOSING:
-            self.client_sockets[client_number].sendall(SERVER_QUIT_SIGNAL_IN_CHAMPION_SELECT)
-            return LEFT_CHAMPION_SELECT
-
-        if chosen_champion in self.chosen_champions:
-            self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
-            return CHAMPION_SELECT
-
-        else:
-            self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
-            self.chosen_champions[client_number] = chosen_champion
-            return LOBBY
 
     def lobby(self, client_number):
-        client_signal = self.client_sockets[client_number].recv(BUFFER_SIZE).decode()
+        try:
+            client_signal = self.client_sockets[client_number].recv(BUFFER_SIZE).decode()
 
-        if self.server_status == SERVER_IS_CLOSING:
-            self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+            if self.server_status == SERVER_IS_CLOSING:
+                self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+                self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+                return CONNECTION_IS_DEACTIVATED
+
+            if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
+                self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
+
+                players_in_lobby = EVERY_PLAYER_CONNECTED
+                for champion in self.chosen_champions:
+                    if champion == CHAMPION_IS_NOT_CHOSEN:
+                        players_in_lobby -= PLAYER_IS_NOT_IN_LOBBY
+
+                if players_in_lobby == EVERY_PLAYER_CONNECTED:
+                    self.client_sockets[client_number].send(pickle.dumps(START_GAME_SIGNAL))
+                    return START_GAME
+                else:
+                    self.client_sockets[client_number].send(pickle.dumps(WAIT_SIGNAL))
+                    return LOBBY
+            elif client_signal == BACK_TO_CHAMPION_SELECT:
+                self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
+                return BACK_TO_CHAMPION_SELECT
+            else:
+                self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
+                return CONNECTION_IS_DEACTIVATED
+        except (ConnectionResetError, ConnectionAbortedError):
             return CONNECTION_IS_DEACTIVATED
 
-        if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
-            self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
-            return LOBBY
-        elif client_signal == BACK_TO_CHAMPION_SELECT:
-            self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
-            return BACK_TO_CHAMPION_SELECT
-        else:
-            self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
-            return CONNECTION_IS_DEACTIVATED
+    def game(self, client_number):
+        for number in range(MAX_PLAYERS):
+            self.players[number] = create_player(STARTING_X, STARTING_Y + (PLAYER_POSITION_Y * number),
+                                                 CHAMPIONS[self.chosen_champions[number]])
+
+        self.game_is_started = GAME_IS_STARTED
+
+        while self.game_is_started:
+            try:
+                move = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
+            except (ConnectionResetError, ConnectionAbortedError):
+                move = "quit"
+
+            if move["quit"] or move == "quit":
+                move["moving_right"] = False
+                move["moving_left"] = True
+                move["moving_up"] = False
+                move["moving_down"] = False
+
+                while self.game_is_started:
+                    self.players[client_number].move(move)
+                    time.sleep(FRAME_TIME)
+                return
+
+            self.handle_move(move, client_number)
+            end_game_result = self.handle_end_game(move, client_number)
+            if end_game_result == GAME_IS_ENDED:
+                self.game_is_started = GAME_IS_NOT_STARTED
+                break
+
+            self.send_info_to_player(client_number)
+
+    def handle_move(self, move, client_number):
+        for obstacle in self.test_obstacles.obstacles:
+            if self.players[client_number].rect.colliderect(obstacle.rect):
+                move["is_colliding"] = True
+
+                if obstacle.rect.x > self.players[client_number].rect.x:
+                    move["moving_right"] = False
+                    move["is_colliding_with_pushing"] = True
+                elif obstacle.rect.x < self.players[client_number].rect.x:
+                    move["moving_left"] = False
+
+                if obstacle.rect.y < self.players[client_number].rect.y:
+                    move["moving_up"] = False
+                elif obstacle.rect.y > self.players[client_number].rect.y:
+                    move["moving_down"] = False
+
+                if obstacle.is_finish_line:
+                    move["has_won"] = True
+                break
+            else:
+                move["is_colliding"] = False
+                move["is_colliding_with_pushing"] = False
+
+        self.players[client_number].move(move)
+
+    def handle_end_game(self, move, client_number):
+        if self.game_is_ended:
+            try:
+                self.client_sockets[client_number].send(pickle.dumps(PLAYER_LOSE_SIGNAL))
+            except (ConnectionResetError, ConnectionAbortedError):
+                pass
+            return GAME_IS_ENDED
+
+        if move["has_won"]:
+            self.game_is_started = GAME_IS_NOT_STARTED
+            try:
+                self.client_sockets[client_number].send(pickle.dumps(PLAYER_WIN_SIGNAL))
+            except (ConnectionResetError, ConnectionAbortedError):
+                pass
+            return GAME_IS_ENDED
+
+        return GAME_IS_GOING
+
+    def send_info_to_player(self, client_number):
+        player_positions = []
+        for player in self.players:
+            player_positions.append([player.rect.x, player.rect.y])
+
+        obstacles_names = self.test_obstacles.names
+        obstacles_positions = []
+
+        for obstacle in self.test_obstacles.obstacles:
+            obstacles_positions.append([obstacle.rect.x, obstacle.rect.y])
+
+        try:
+            self.client_sockets[client_number].send(
+                pickle.dumps((player_positions, obstacles_names, obstacles_positions)))
+        except (ConnectionResetError, ConnectionAbortedError):
+            pass
+
+    def timed_generate_obstacles(self):
+        while True:
+            time.sleep(WAIT_FOR_ANOTHER_CHECK)
+            while self.game_is_started:
+                if self.elapsed_total_time >= FINISH_LINE_GENERATE_DELAY:
+                    self.test_obstacles.add_obstacle(generate_finish_line=True)
+                    self.elapsed_total_time = COUNTING_START
+                    self.elapsed_time_from_last_obstacle_generation = COUNTING_START
+                    return
+
+                if self.elapsed_time_from_last_obstacle_generation >= OBSTACLE_GENERATE_DELAY:
+                    self.test_obstacles.add_obstacle()
+                    self.elapsed_time_from_last_obstacle_generation = COUNTING_START
+
+                self.test_obstacles.handle_obstacles()
+                self.elapsed_total_time += SECOND
+                self.elapsed_time_from_last_obstacle_generation += SECOND
+                time.sleep(COUNTER_TIME)
+            self.test_obstacles.obstacles = []
+
+    def move_obstacles(self):
+        while self.server_status == SERVER_IS_RUNNING:
+            while self.game_is_started:
+                self.test_obstacles.handle_obstacles()
+                time.sleep(FRAME_TIME)
+            time.sleep(WAIT_FOR_ANOTHER_CHECK)
 
     def open_server_commands(self):
         while True:

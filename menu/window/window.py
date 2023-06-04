@@ -14,7 +14,7 @@ class Window:
     FONT_OPTION = pygame.font.Font("PressStart2P-Regular.ttf", 40)
     FONT_CHAMPION_SELECT = pygame.font.Font("src/menu/PressStart2P-Regular.ttf", 60)
     CHAMPIONS = [[pygame.image.load("src/player/assets/characters/cute_boy/idle/0.png"), "cute boy"],
-                 [pygame.image.load("src/player/assets/characters/engineer/idle/1.png"), "engineer"],
+                 [pygame.image.load("src/player/assets/characters/engineer/idle/0.png"), "engineer"],
                  [pygame.image.load("src/player/assets/characters/frog/idle/0.png"), "frog"],
                  [pygame.image.load("src/player/assets/characters/girl/idle/0.png"), "girl"],
                  [pygame.image.load("src/player/assets/characters/spiderman/idle/0.png"), "spiderman"],

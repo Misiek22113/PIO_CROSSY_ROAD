@@ -8,10 +8,10 @@ FPS = 60
 
 
 class LocalWindowPlayerMovement:
-    def __init__(self, width, height):
+    def __init__(self, width, height, screen):
         self.width = width
         self.height = height
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen = screen
         self.clock = pygame.time.Clock()
         self.background_color = BG_COLOR
         self.is_running = True

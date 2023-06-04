@@ -3,10 +3,10 @@ import pygame
 OBSTACLE_SCALE = 5
 
 obstacles_types = {  # if _ is first char in obstacle type name, then it's deadly, if it's +, then that's finish line
-    "desk": f"obstacles/assets/desk.png",
-    "_integral": f"obstacles/assets/integral.png",
+    "desk": f"src/obstacles/assets/desk.png",
+    "_integral": f"src/obstacles/assets/integral.png",
 
-    "+finish_line": f"obstacles/assets/finish_line.png"
+    "+finish_line": f"src/obstacles/assets/finish_line.png"
 }
 
 
@@ -41,7 +41,7 @@ class Obstacle:
         self.is_finish_line = False
 
     def print_obstacle(self, screen):
-        screen.blit(self.img, self.rect)
+        screen.screen.blit(self.img, self.rect)
 
     def move_obstacle(self, offset):
         self.x += offset

@@ -6,6 +6,11 @@ import pygame
 from src.menu.window.window import Window
 from src.menu.button.button import Button
 
+PLAYER_Y = 350
+PLAYER_X = 240
+CHAMPION_NAME = 1
+GAME_IS_STARTED = 1
+BUFFER_SIZE = 4096
 CHOSEN_CHAMPIONS_INFORMATION_REQUEST = b"P"
 CHECK_CONNECTION = 0
 QUIT = b"Q"
@@ -52,34 +57,42 @@ class Lobby(Window):
 
             try:
                 socket.sendall(CHOSEN_CHAMPIONS_INFORMATION_REQUEST)
-                chosen_champions = pickle.loads(socket.recv(28))
-            except ConnectionResetError:
+                chosen_champions = pickle.loads(socket.recv(BUFFER_SIZE))
+                start_game = pickle.loads(socket.recv(BUFFER_SIZE))
+            except (ConnectionResetError, ConnectionAbortedError):
                 socket.close()
-                return "menu"
+                return "lost_connection_with_server", None
 
             if chosen_champions[CHECK_CONNECTION] is None:
                 socket.close()
-                return "menu"
+                return "server_is_closed", None
 
             for player_number, chosen_champion in enumerate(chosen_champions):
                 if chosen_champion != PLAYER_IS_NOT_CONNECTED:
-                    self.draw_player(240 + (PLAYER_POSITION_IN_LOBBY * player_number), 350, chosen_champion)
+                    self.draw_player(PLAYER_X + (PLAYER_POSITION_IN_LOBBY * player_number), PLAYER_Y, chosen_champion)
+
+            if start_game == GAME_IS_STARTED:
+                champions_names = []
+                for chosen_champion in chosen_champions:
+                    champions_names.append(self.CHAMPIONS[chosen_champion][CHAMPION_NAME])
+
+                return "game", champions_names
 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.LEAVE_BUTTON.check_for_input(self.LOBBY_MOUSE_POS):
                         try:
                             socket.sendall(BACK)
-                        except ConnectionResetError:
+                        except (ConnectionResetError, ConnectionAbortedError):
                             socket.close()
-                            return "menu"
+                            return "lost_connection_with_server", None
 
-                        return "champion_select"
+                        return "champion_select", None
 
                 if event.type == pygame.QUIT:
                     try:
                         socket.sendall(QUIT)
-                    except ConnectionResetError:
+                    except (ConnectionResetError, ConnectionAbortedError):
                         pass
 
                     socket.close()

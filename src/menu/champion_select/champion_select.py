@@ -81,7 +81,7 @@ class ChampionSelect(Window):
                     if self.BACK_BUTTON.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         try:
                             socket.sendall(pickle.dumps(BACK))
-                        except ConnectionResetError:
+                        except (ConnectionResetError, ConnectionAbortedError):
                             pass
 
                         socket.close()
@@ -90,16 +90,18 @@ class ChampionSelect(Window):
                         try:
                             socket.sendall(pickle.dumps(self.champion_index))
                             server_signal = socket.recv(BUFFER_SIZE).decode()
-                        except ConnectionResetError:
+                        except (ConnectionResetError, ConnectionAbortedError):
                             socket.close()
-                            return "menu"
+                            return "lost_connection_with_server"
 
                         if server_signal == SERVER_IS_CLOSED:
                             socket.close()
-                            return "menu"
+                            return "server_is_closed"
 
                         if server_signal == CHAMPION_IS_AVAILABLE:
                             return "lobby"
+                        else:
+                            return "champion_is_picked"
 
                     if self.BUTTON_ARROW_RIGHT.check_for_input(self.CHAMPION_SELECT_MOUSE_POS):
                         self.change_champion_index(self.champion_index + CHAMPION_INDEX_OFFSET)

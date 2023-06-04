@@ -1,13 +1,13 @@
 import pygame
 
-from src.map.map import SCROLL_SPEED
+# from src.map.map import SCROLL_SPEED
 
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
-
+SCROLL_SPEED = 3
 
 def create_player(x, y, picked_character):
-    player_img = pygame.image.load(f"player/assets/characters/{picked_character}/idle/0.png")
+    player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))
