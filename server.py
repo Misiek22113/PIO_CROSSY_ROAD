@@ -2,10 +2,12 @@ import pickle
 import socket
 import sys
 import threading
+import time
 
 import numpy as np
 
 # server consts
+from src.game_simulation.test_obstacles import TestObstacles
 from src.player.player import create_player
 
 QUIT = "q"
@@ -61,6 +63,8 @@ SERVER_QUIT_SIGNAL_IN_LOBBY = [None, None, None]
 LOBBY = 1
 CHAMPION_SELECT = 2
 LEFT_CHAMPION_SELECT = -1
+OBSTACLE_GENERATE_DELAY = 2
+FINISH_LINE_GENERATE_DELAY = 10  # TODO change to 60 * 1000ms
 
 CHAMPIONS = ["cute_boy", "engineer", "frog", "girl", "spiderman", "student"]
 
@@ -89,6 +93,9 @@ class Server:
         # variables for game
         self.chosen_champions = [CHAMPION_IS_NOT_CHOSEN for _ in range(MAX_PLAYERS)]
         self.players = [None, None, None]
+        self.elapsed_time_from_last_obstacle_generation = 0
+        self.elapsed_total_time = 0
+        self.test_obstacles = TestObstacles()
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
@@ -169,17 +176,27 @@ class Server:
 
                 if game_start:
                     for x in range(3):
-                        self.players[x] = create_player(100, 200+(200*x), CHAMPIONS[self.chosen_champions[x]])
+                        self.players[x] = create_player(100, 200 + (200 * x), CHAMPIONS[self.chosen_champions[x]])
+
+                    threading.Thread(target=self.timed_generate_obstacles).start()
 
                     while True:
                         move = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
                         self.players[client_number].move(move)
-                        to_send = []
+                        player_positions = []
 
                         for player in self.players:
-                            to_send.append([player.rect.x, player.rect.y])
+                            player_positions.append([player.rect.x, player.rect.y])
 
-                        self.client_sockets[client_number].send(pickle.dumps(to_send))
+                        obstacles_names = self.test_obstacles.names
+                        obstacles_xy = []
+
+                        self.test_obstacles.handle_obstacles()
+
+                        for obstacle in self.test_obstacles.obstacles:
+                            obstacles_xy.append([obstacle.rect.x, obstacle.rect.y])
+
+                        self.client_sockets[client_number].send(pickle.dumps((player_positions, obstacles_names, obstacles_xy)))
 
             except (ConnectionResetError, ConnectionAbortedError):
                 break
@@ -238,6 +255,23 @@ class Server:
         else:
             self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
             return CONNECTION_IS_DEACTIVATED
+
+    def timed_generate_obstacles(self):
+        while True:
+            if self.elapsed_total_time >= FINISH_LINE_GENERATE_DELAY:
+                self.test_obstacles.add_obstacle(generate_finish_line=True)
+                self.elapsed_total_time = 0
+                self.elapsed_time_from_last_obstacle_generation = 0
+                return
+
+            if self.elapsed_time_from_last_obstacle_generation >= OBSTACLE_GENERATE_DELAY:
+                self.test_obstacles.add_obstacle()
+                self.elapsed_time_from_last_obstacle_generation = 0
+
+            self.test_obstacles.handle_obstacles()
+            self.elapsed_total_time += 1
+            self.elapsed_time_from_last_obstacle_generation += 1
+            time.sleep(1)
 
     def open_server_commands(self):
         while True:

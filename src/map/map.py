@@ -1,6 +1,8 @@
 import pickle
 
 import pygame
+
+from src.game_simulation.test_obstacles import TestObstacles
 from src.player.local_window_player_movement import SCREEN_WIDTH
 from src.player.local_window_player_movement import SCREEN_HEIGHT
 from src.player.player import create_player
@@ -31,6 +33,7 @@ class Map(Window):
             "moving_up": False,
             "moving_down": False
         }
+        self.obstacles = TestObstacles()
 
     def draw_scrolling_background(self):
         self.scroll -= SCROLL_SPEED
@@ -45,13 +48,16 @@ class Map(Window):
             self.local_window.handle_events(self.move)
 
             server_socket.sendall(pickle.dumps(self.move))
-            positions = pickle.loads(server_socket.recv(4096))
+            positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(4096))
 
             for client_number, position in enumerate(positions):
                 self.players[client_number].set_xy(position)
 
+            self.obstacles.update_obstacles(obstacles_names, obstacles_xy)
+
             for player in self.players:
                 player.print_player(self.local_window)
 
+            self.obstacles.print_obstacles(self.local_window)
             pygame.display.update()
 
