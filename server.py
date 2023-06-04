@@ -6,56 +6,11 @@ import time
 
 import numpy as np
 
-# server consts
 from src.game_simulation.test_obstacles import TestObstacles
 from src.player.player import create_player
 
-GAME_IS_GOING = 0
-
-GAME_IS_ENDED = 1
-
-GAME_IS_ENDED = 1
-
-GAME_IS_ENDED = 1
-
-WAIT_SIGNAL = 0
-
-START_GAME_SIGNAL = 1
-
-EVERY_PLAYER_CONNECTED = 0
-
-PLAYER_IS_NOT_CONNECTED = 1
-
-EVERY_PLAYER_CONNECTED = 0
-
-START_GAME = 5
-
-CLIENT_DISCONECT_IN_CHAMPION_SELECT = 15
-
-COUNTING_START = 0
-
-SECOND = 1
-
-COUNTER_TIME = 1
-
-WAIT_FOR_ANOTHER_CHECK = 1
-
-PLAYER_WIN_SIGNAL = (10, 10, 10)
-
-GAME_IS_NOT_STARTED = False
-
-PLAYER_LOSE_SIGNAL = (9, 9, 9)
-
-FRAME_TIME = 1 / 60
-
-GAME_IS_STARTED = True
-
-PLAYER_POSITION_Y = 200
-
-STARTING_Y = 200
-
-STARTING_X = 100
-
+# server consts
+GAME_IS_NOT_ENDED = False
 QUIT = "q"
 
 SERVER_IS_CLOSING = True
@@ -109,8 +64,33 @@ SERVER_QUIT_SIGNAL_IN_LOBBY = [None, None, None]
 LOBBY = 1
 CHAMPION_SELECT = 2
 LEFT_CHAMPION_SELECT = -1
+CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
+START_GAME = 5
+
 OBSTACLE_GENERATE_DELAY = 2
-FINISH_LINE_GENERATE_DELAY = 10  # TODO change to 60 * 1000ms
+FINISH_LINE_GENERATE_DELAY = 10  # TODO change to 60s
+SECOND = 1
+COUNTER_TIME = 1
+COUNTING_START = 0
+WAIT_FOR_ANOTHER_CHECK = 1
+FRAME_TIME = 1 / 60
+
+GAME_IS_GOING = 0
+GAME_IS_NOT_STARTED = False
+GAME_IS_STARTED = True
+START_GAME_SIGNAL = 1
+WAIT_SIGNAL = 0
+
+EVERY_PLAYER_CONNECTED = MAX_PLAYERS
+PLAYER_IS_NOT_IN_LOBBY = 1
+
+PLAYER_WIN_SIGNAL = (10, 10, 10)
+PLAYER_LOSE_SIGNAL = (9, 9, 9)
+
+PLAYER_POSITION_Y = 200
+STARTING_Y = 200
+STARTING_X = 100
+NO_PLAYER_CREATE = [None, None, None]
 
 CHAMPIONS = ["cute_boy", "engineer", "frog", "girl", "spiderman", "student"]
 
@@ -138,13 +118,13 @@ class Server:
 
         # variables for game
         self.chosen_champions = [CHAMPION_IS_NOT_CHOSEN for _ in range(MAX_PLAYERS)]
-        self.players = [None, None, None]
-        self.elapsed_time_from_last_obstacle_generation = 0
-        self.elapsed_total_time = 0
+        self.players = NO_PLAYER_CREATE
+        self.elapsed_time_from_last_obstacle_generation = COUNTING_START
+        self.elapsed_total_time = COUNTING_START
         self.test_obstacles = TestObstacles()
 
-        self.game_is_started = False
-        self.game_is_ended = False
+        self.game_is_started = GAME_IS_NOT_STARTED
+        self.game_is_ended = GAME_IS_NOT_ENDED
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
@@ -271,12 +251,12 @@ class Server:
             if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
                 self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
 
-                count = EVERY_PLAYER_CONNECTED
+                players_in_lobby = EVERY_PLAYER_CONNECTED
                 for champion in self.chosen_champions:
                     if champion == CHAMPION_IS_NOT_CHOSEN:
-                        count += PLAYER_IS_NOT_CONNECTED
+                        players_in_lobby -= PLAYER_IS_NOT_IN_LOBBY
 
-                if count == EVERY_PLAYER_CONNECTED:
+                if players_in_lobby == EVERY_PLAYER_CONNECTED:
                     self.client_sockets[client_number].send(pickle.dumps(START_GAME_SIGNAL))
                     return START_GAME
                 else:
