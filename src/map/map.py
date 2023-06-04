@@ -3,11 +3,9 @@ import pickle
 import pygame
 
 from src.game_simulation.test_obstacles import TestObstacles
-from src.player.local_window_player_movement import SCREEN_WIDTH
-from src.player.local_window_player_movement import SCREEN_HEIGHT
 from src.player.player import create_player
 from src.menu.window.window import Window
-from src.player.local_window_player_movement import FPS, LocalWindowPlayerMovement, SCREEN_WIDTH, SCREEN_HEIGHT
+from src.player.local_window_player_movement import LocalWindowPlayerMovement, SCREEN_WIDTH, SCREEN_HEIGHT
 
 import math
 
@@ -24,7 +22,8 @@ class Map(Window):
         self.background_img = pygame.image.load("src/map/assets/background.png").convert()
         self.background_width = self.background_img.get_width()
         self.tiles = math.ceil(self.background_width / SCREEN_WIDTH) + 1
-        self.players = [create_player(100, 200, player_skins[0]), create_player(100, 400, player_skins[1]), create_player(100, 600, player_skins[2])]
+        self.players = [create_player(100, 200, player_skins[0]),
+                        create_player(100, 400, player_skins[1]), create_player(100, 600, player_skins[2])]
         self.scroll = 0
         self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT, self.screen)
         self.move = {
