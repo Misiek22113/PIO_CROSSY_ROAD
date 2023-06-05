@@ -66,12 +66,13 @@ LEFT_CHAMPION_SELECT = -1
 CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
 START_GAME = 5
 
-OBSTACLE_GENERATE_DELAY = 4
-FINISH_LINE_GENERATE_DELAY = 60
+OBSTACLE_GENERATE_DELAY = 1
+FINISH_LINE_GENERATE_DELAY = 20
 SECOND = 1
 COUNTING_START = 0
 WAIT_FOR_ANOTHER_CHECK = 1
 FRAME_TIME = 1 / 60
+TIME_BETWEEN_MOVE_OBSTACLE = 0.0000001
 
 GAME_IS_GOING = 0
 GAME_IS_NOT_STARTED = False
@@ -128,7 +129,7 @@ class Server:
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
-        threading.Thread(target=self.move_obstacles).start()
+        # threading.Thread(target=self.move_obstacles).start()
         threading.Thread(target=self.timed_generate_obstacles).start()
 
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
@@ -296,7 +297,8 @@ class Server:
 
                 while self.game_is_started:
                     self.players[client_number].move(move)
-                    time.sleep(FRAME_TIME)
+                    self.test_obstacles.handle_obstacles()
+                    time.sleep(TIME_BETWEEN_MOVE_OBSTACLE)
                 return
 
             obstacles_names, obstacles_positions = self.handle_move(move, client_number)
@@ -308,6 +310,8 @@ class Server:
 
             if result_send_info_to_player == QUIT:
                 return
+
+            self.test_obstacles.handle_obstacles()
 
     def handle_move(self, move, client_number):
         obstacles_names = self.test_obstacles.names
@@ -400,13 +404,6 @@ class Server:
                 self.elapsed_total_time += SECOND
                 self.elapsed_time_from_last_obstacle_generation += SECOND
                 time.sleep(SECOND)
-
-    def move_obstacles(self):
-        while self.server_status == SERVER_IS_RUNNING:
-            while self.game_is_ended == GAME_IS_GOING:
-                self.test_obstacles.handle_obstacles()
-                time.sleep(FRAME_TIME)
-            time.sleep(WAIT_FOR_ANOTHER_CHECK)
 
     def open_server_commands(self):
         while True:
