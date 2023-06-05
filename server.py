@@ -127,6 +127,8 @@ class Server:
         self.game_is_started = GAME_IS_NOT_STARTED
         self.game_is_ended = GAME_IS_ENDED
 
+        self.start_to = 0
+
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
         # threading.Thread(target=self.move_obstacles).start()
@@ -234,7 +236,6 @@ class Server:
             if chosen_champion in self.chosen_champions:
                 self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
                 return CHAMPION_SELECT
-
             else:
                 self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
                 self.chosen_champions[client_number] = chosen_champion
@@ -248,16 +249,18 @@ class Server:
 
             if self.server_status == SERVER_IS_CLOSING:
                 self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+                self.client_sockets[client_number].recv(BUFFER_SIZE)
                 self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
                 return CONNECTION_IS_DEACTIVATED
 
             if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
-                self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
-
                 players_in_lobby = EVERY_PLAYER_CONNECTED
                 for champion in self.chosen_champions:
                     if champion == CHAMPION_IS_NOT_CHOSEN:
                         players_in_lobby -= PLAYER_IS_NOT_IN_LOBBY
+
+                self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
+                self.client_sockets[client_number].recv(BUFFER_SIZE)
 
                 if players_in_lobby == EVERY_PLAYER_CONNECTED:
                     self.client_sockets[client_number].send(pickle.dumps(START_GAME_SIGNAL))
