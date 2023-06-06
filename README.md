@@ -37,7 +37,7 @@ Serwer uruchamiamy poprzez komendę "python server.py". Gracza uruchamimay przez
 server.py uruchamiamy jak normalny program w Pycharmie.
 
 - client.py
-W celu możliwości uruchomienia trzykrotnie client.py musi wykonać następujące kroki:
+W celu możliwości uruchomienia trzykrotnie client.py musimy wykonać następujące kroki:
 1. Wchodzimy w "Edit Configurations..." (znajduje się to w rozwijanej liście, kiedy klikniemy na nazwę programu, który chcemy uruchomić obok przycisków do uruchomienia czy debugowania.)
 2. Zaznaczamy opcję "Allow parallel run".
 3. Zatwierdzamy "Apply".
