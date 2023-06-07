@@ -125,6 +125,7 @@ class Server:
 
         self.game_is_started = GAME_IS_NOT_STARTED
         self.game_is_ended = GAME_IS_ENDED
+        self.players_in_game = MAX_PLAYERS
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
@@ -287,6 +288,7 @@ class Server:
                 move = {"quit": True}
 
             if move["quit"]:
+                self.players_in_game += CLIENT_QUIT
                 move["has_won"] = False
                 move["moving_right"] = False
                 move["moving_left"] = True
@@ -294,7 +296,7 @@ class Server:
                 move["moving_down"] = False
                 move["is_colliding_with_pushing"] = False
                 move["is_colliding"] = False
-                while self.game_is_ended:
+                while self.game_is_ended == GAME_IS_GOING and self.players_in_game > 0:
                     self.players[client_number].move(move)
                     self.test_obstacles.handle_obstacles()
                     time.sleep(0.01)

@@ -61,38 +61,40 @@ class Map(Window):
 
     def handle_map_loop(self, server_socket):
         self.obstacles = TestObstacles()
-        try:
-            while True:
-                self.draw_scrolling_background()
-                self.local_window.handle_events(self.move)
+        while True:
+            self.draw_scrolling_background()
+            self.local_window.handle_events(self.move)
+            try:
                 server_socket.sendall(pickle.dumps(self.move))
+            except (ConnectionResetError, ConnectionAbortedError):
+                pass
 
-                if self.move["quit"]:
-                    server_socket.close()
-                    pygame.quit()
-                    sys.exit()
+            if self.move["quit"]:
+                server_socket.close()
+                pygame.quit()
+                sys.exit()
 
+            try:
                 positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(BUFFER_SIZE))
+            except (ConnectionResetError, ConnectionAbortedError):
+                return "lost_connection_with_server", None
 
-                if isinstance(positions, int):
-                    server_socket.close()
-                    if positions == WIN:
-                        return "win", obstacles_xy
-                    elif positions == LOST:
-                        return "lost", obstacles_xy
-                    else:
-                        return "server_is_closed", None
+            if isinstance(positions, int):
+                server_socket.close()
+                if positions == WIN:
+                    return "win", obstacles_xy
+                elif positions == LOST:
+                    return "lost", obstacles_xy
+                else:
+                    return "server_is_closed", None
 
-                for client_number, position in enumerate(positions):
-                    self.players[client_number].set_xy(position)
+            for client_number, position in enumerate(positions):
+                self.players[client_number].set_xy(position)
 
-                self.obstacles.update_obstacles(obstacles_names, obstacles_xy)
+            self.obstacles.update_obstacles(obstacles_names, obstacles_xy)
 
-                for player in self.players:
-                    player.print_player(self.local_window)
+            for player in self.players:
+                player.print_player(self.local_window)
 
-                self.obstacles.print_obstacles(self.local_window)
-                pygame.display.update()
-        except (ConnectionResetError, ConnectionAbortedError):
-            return "lost_connection_with_server", None
-
+            self.obstacles.print_obstacles(self.local_window)
+            pygame.display.update()
