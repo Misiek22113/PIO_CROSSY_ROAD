@@ -72,10 +72,7 @@ class Map(Window):
                     pygame.quit()
                     sys.exit()
 
-                try:
-                    positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(BUFFER_SIZE))
-                except (ConnectionResetError, ConnectionAbortedError):
-                    return "lost_connection_with_server", None
+                positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(BUFFER_SIZE))
 
                 if isinstance(positions, int):
                     server_socket.close()

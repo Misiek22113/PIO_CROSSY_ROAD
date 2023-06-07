@@ -167,7 +167,10 @@ class Server:
                 sys.exit()
 
             if self.number_of_started_connections == MAX_PLAYERS:
-                client_new_connection.send(SERVER_IS_FULL)
+                try:
+                    client_new_connection.send(SERVER_IS_FULL)
+                except (ConnectionResetError, ConnectionAbortedError):
+                    pass
                 client_new_connection.close()
             else:
                 for number, status in enumerate(self.client_number):
@@ -363,7 +366,11 @@ class Server:
 
     def send_info_to_player(self, client_number, obstacles_names, obstacles_positions):
         if self.server_status == SERVER_IS_CLOSING:
-            self.client_sockets[client_number].send(pickle.dumps(QUIT_SIGNAL_IN_GAME))
+            try:
+                self.client_sockets[client_number].send(pickle.dumps(QUIT_SIGNAL_IN_GAME))
+            except (ConnectionResetError, ConnectionAbortedError):
+                pass
+
             self.game_is_started = GAME_IS_NOT_STARTED
             return QUIT
 
