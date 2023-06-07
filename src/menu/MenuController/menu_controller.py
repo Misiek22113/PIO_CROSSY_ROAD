@@ -9,6 +9,8 @@ from src.menu.lobby.lobby import Lobby
 from src.menu.champion_select.champion_select import ChampionSelect
 from src.menu.notification.Notification import Notification
 
+CONFIRM_RECV = b"Y"
+
 EMPTY_MAP = None
 WIN = True
 LOST = False
@@ -87,13 +89,15 @@ class MenuController:
         try:
             server_socket.connect((self.server_ip, self.server_port))
             connection_message = server_socket.recv(BUFFER_SIZE).decode()
+
+            if connection_message == SERVER_IS_FULL:
+                server_socket.sendall(CONFIRM_RECV)
+                server_socket.close()
+                return "server_is_full"
         except ConnectionRefusedError:
             return "server_offline_notification"
         except ConnectionResetError:
             server_socket.close()
             return "lost_connection_with_server"
-
-        if connection_message == SERVER_IS_FULL:
-            return "server_is_full"
 
         return server_socket

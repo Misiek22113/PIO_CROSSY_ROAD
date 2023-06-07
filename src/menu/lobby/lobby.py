@@ -60,9 +60,7 @@ class Lobby(Window):
 
             try:
                 socket.sendall(CHOSEN_CHAMPIONS_INFORMATION_REQUEST)
-                chosen_champions = pickle.loads(socket.recv(BUFFER_SIZE))
-                socket.sendall(CONFIRM_RECV)
-                start_game = pickle.loads(socket.recv(BUFFER_SIZE))
+                chosen_champions, start_game = pickle.loads(socket.recv(BUFFER_SIZE))
             except (ConnectionResetError, ConnectionAbortedError):
                 socket.close()
                 return "lost_connection_with_server", None
