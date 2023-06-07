@@ -9,8 +9,6 @@ from src.menu.lobby.lobby import Lobby
 from src.menu.champion_select.champion_select import ChampionSelect
 from src.menu.notification.Notification import Notification
 
-CONFIRM_RECV = b"Y"
-
 EMPTY_MAP = None
 WIN = True
 LOST = False
@@ -70,7 +68,7 @@ class MenuController:
             elif actual == "lost_connection_with_server":
                 actual = self.lost_connection_with_server.handle_notification_loop()
             elif actual == "server_is_full":
-                actual = self.lost_connection_with_server.handle_notification_loop()
+                actual = self.server_is_full.handle_notification_loop()
             elif actual == "server_is_closed":
                 actual = self.server_is_closed.handle_notification_loop()
             elif actual == "champion_is_picked":
@@ -91,7 +89,6 @@ class MenuController:
             connection_message = server_socket.recv(BUFFER_SIZE).decode()
 
             if connection_message == SERVER_IS_FULL:
-                server_socket.sendall(CONFIRM_RECV)
                 server_socket.close()
                 return "server_is_full"
         except ConnectionRefusedError:

@@ -168,7 +168,6 @@ class Server:
 
             if self.number_of_started_connections == MAX_PLAYERS:
                 client_new_connection.send(SERVER_IS_FULL)
-                client_new_connection.recv(BUFFER_SIZE)
                 client_new_connection.close()
             else:
                 for number, status in enumerate(self.client_number):
