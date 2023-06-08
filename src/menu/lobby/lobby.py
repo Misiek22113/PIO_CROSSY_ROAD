@@ -1,10 +1,13 @@
 import pickle
 import sys
+import time
 
 import pygame
 
 from src.menu.window.window import Window
 from src.menu.button.button import Button
+
+CONFIRM_RECV = b"A"
 
 PLAYER_Y = 350
 PLAYER_X = 240
@@ -57,8 +60,7 @@ class Lobby(Window):
 
             try:
                 socket.sendall(CHOSEN_CHAMPIONS_INFORMATION_REQUEST)
-                chosen_champions = pickle.loads(socket.recv(BUFFER_SIZE))
-                start_game = pickle.loads(socket.recv(BUFFER_SIZE))
+                chosen_champions, start_game = pickle.loads(socket.recv(BUFFER_SIZE))
             except (ConnectionResetError, ConnectionAbortedError):
                 socket.close()
                 return "lost_connection_with_server", None

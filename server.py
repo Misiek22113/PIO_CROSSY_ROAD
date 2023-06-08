@@ -66,8 +66,8 @@ LEFT_CHAMPION_SELECT = -1
 CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
 START_GAME = 5
 
-OBSTACLE_GENERATE_DELAY = 4
-FINISH_LINE_GENERATE_DELAY = 60
+OBSTACLE_GENERATE_DELAY = 1
+FINISH_LINE_GENERATE_DELAY = 5
 SECOND = 1
 COUNTING_START = 0
 WAIT_FOR_ANOTHER_CHECK = 1
@@ -88,7 +88,7 @@ PLAYER_LOSE_SIGNAL = [9, 9]
 QUIT_SIGNAL_IN_GAME = (8, 8, 8)
 
 PLAYER_POSITION_Y = 200
-STARTING_Y = 300
+STARTING_Y = 200
 STARTING_X = 100
 NO_PLAYER_CREATE = [None, None, None]
 
@@ -125,10 +125,10 @@ class Server:
 
         self.game_is_started = GAME_IS_NOT_STARTED
         self.game_is_ended = GAME_IS_ENDED
+        self.players_in_game = MAX_PLAYERS
 
     def start_server(self):
         threading.Thread(target=self.open_server_commands).start()
-        threading.Thread(target=self.move_obstacles).start()
         threading.Thread(target=self.timed_generate_obstacles).start()
 
         for x in range(MAX_PLAYERS + NUMBER_OF_THREADS_TO_CANCEL_CONNECTION):
@@ -168,7 +168,10 @@ class Server:
                 sys.exit()
 
             if self.number_of_started_connections == MAX_PLAYERS:
-                client_new_connection.send(SERVER_IS_FULL)
+                try:
+                    client_new_connection.send(SERVER_IS_FULL)
+                except (ConnectionResetError, ConnectionAbortedError):
+                    pass
                 client_new_connection.close()
             else:
                 for number, status in enumerate(self.client_number):
@@ -233,7 +236,6 @@ class Server:
             if chosen_champion in self.chosen_champions:
                 self.client_sockets[client_number].sendall(CHAMPION_IS_NOT_AVAILABLE)
                 return CHAMPION_SELECT
-
             else:
                 self.client_sockets[client_number].sendall(CHAMPION_IS_AVAILABLE)
                 self.chosen_champions[client_number] = chosen_champion
@@ -247,22 +249,21 @@ class Server:
 
             if self.server_status == SERVER_IS_CLOSING:
                 self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
+                self.client_sockets[client_number].recv(BUFFER_SIZE)
                 self.client_sockets[client_number].send(pickle.dumps(SERVER_QUIT_SIGNAL_IN_LOBBY))
                 return CONNECTION_IS_DEACTIVATED
 
             if client_signal == CHOSEN_CHAMPIONS_INFORMATION_REQUEST:
-                self.client_sockets[client_number].send(pickle.dumps(self.chosen_champions))
-
                 players_in_lobby = EVERY_PLAYER_CONNECTED
                 for champion in self.chosen_champions:
                     if champion == CHAMPION_IS_NOT_CHOSEN:
                         players_in_lobby -= PLAYER_IS_NOT_IN_LOBBY
 
                 if players_in_lobby == EVERY_PLAYER_CONNECTED:
-                    self.client_sockets[client_number].send(pickle.dumps(START_GAME_SIGNAL))
+                    self.client_sockets[client_number].send(pickle.dumps([self.chosen_champions, START_GAME_SIGNAL]))
                     return START_GAME
                 else:
-                    self.client_sockets[client_number].send(pickle.dumps(WAIT_SIGNAL))
+                    self.client_sockets[client_number].send(pickle.dumps([self.chosen_champions, WAIT_SIGNAL]))
                     return LOBBY
             elif client_signal == BACK_TO_CHAMPION_SELECT:
                 self.chosen_champions[client_number] = CHAMPION_IS_NOT_CHOSEN
@@ -283,21 +284,23 @@ class Server:
         while self.game_is_started:
             try:
                 move = pickle.loads(self.client_sockets[client_number].recv(BUFFER_SIZE))
-            except (ConnectionResetError, ConnectionAbortedError):
+            except (ConnectionResetError, ConnectionAbortedError, EOFError):
                 move = {"quit": True}
-            except EOFError:
-                return
 
             if move["quit"]:
+                self.players_in_game += CLIENT_QUIT
+                move["has_won"] = False
                 move["moving_right"] = False
                 move["moving_left"] = True
                 move["moving_up"] = False
                 move["moving_down"] = False
-
-                while self.game_is_started:
+                move["is_colliding_with_pushing"] = False
+                move["is_colliding"] = False
+                while self.game_is_ended == GAME_IS_GOING and self.players_in_game > 0:
                     self.players[client_number].move(move)
-                    time.sleep(FRAME_TIME)
-                return
+                    self.test_obstacles.handle_obstacles()
+                    time.sleep(0.01)
+                break
 
             obstacles_names, obstacles_positions = self.handle_move(move, client_number)
             end_game_result = self.handle_end_game(move, client_number)
@@ -308,6 +311,8 @@ class Server:
 
             if result_send_info_to_player == QUIT:
                 return
+
+            self.test_obstacles.handle_obstacles()
 
     def handle_move(self, move, client_number):
         obstacles_names = self.test_obstacles.names
@@ -363,7 +368,11 @@ class Server:
 
     def send_info_to_player(self, client_number, obstacles_names, obstacles_positions):
         if self.server_status == SERVER_IS_CLOSING:
-            self.client_sockets[client_number].send(pickle.dumps(QUIT_SIGNAL_IN_GAME))
+            try:
+                self.client_sockets[client_number].send(pickle.dumps(QUIT_SIGNAL_IN_GAME))
+            except (ConnectionResetError, ConnectionAbortedError):
+                pass
+
             self.game_is_started = GAME_IS_NOT_STARTED
             return QUIT
 
@@ -400,13 +409,6 @@ class Server:
                 self.elapsed_total_time += SECOND
                 self.elapsed_time_from_last_obstacle_generation += SECOND
                 time.sleep(SECOND)
-
-    def move_obstacles(self):
-        while self.server_status == SERVER_IS_RUNNING:
-            while self.game_is_ended == GAME_IS_GOING:
-                self.test_obstacles.handle_obstacles()
-                time.sleep(FRAME_TIME)
-            time.sleep(WAIT_FOR_ANOTHER_CHECK)
 
     def open_server_commands(self):
         while True:

@@ -68,7 +68,7 @@ class MenuController:
             elif actual == "lost_connection_with_server":
                 actual = self.lost_connection_with_server.handle_notification_loop()
             elif actual == "server_is_full":
-                actual = self.lost_connection_with_server.handle_notification_loop()
+                actual = self.server_is_full.handle_notification_loop()
             elif actual == "server_is_closed":
                 actual = self.server_is_closed.handle_notification_loop()
             elif actual == "champion_is_picked":
@@ -87,13 +87,14 @@ class MenuController:
         try:
             server_socket.connect((self.server_ip, self.server_port))
             connection_message = server_socket.recv(BUFFER_SIZE).decode()
+
+            if connection_message == SERVER_IS_FULL:
+                server_socket.close()
+                return "server_is_full"
         except ConnectionRefusedError:
             return "server_offline_notification"
         except ConnectionResetError:
             server_socket.close()
             return "lost_connection_with_server"
-
-        if connection_message == SERVER_IS_FULL:
-            return "server_is_full"
 
         return server_socket

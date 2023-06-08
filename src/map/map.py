@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 import pygame
 
@@ -19,9 +20,9 @@ EMPTY_OBSTACLES = None
 INIT_SCROLL = 0
 SCROLL_SPEED = 3
 
-FIRST_PLAYER_POSITION = [100, 400]
-SECOND_PLAYER_POSITION = [100, 600]
-THIRD_PLAYER_POSITION = [100, 800]
+FIRST_PLAYER_POSITION = [100, 200]
+SECOND_PLAYER_POSITION = [100, 400]
+THIRD_PLAYER_POSITION = [100, 600]
 
 FIRST_PLAYER = 0
 SECOND_PLAYER = 1
@@ -63,12 +64,15 @@ class Map(Window):
         while True:
             self.draw_scrolling_background()
             self.local_window.handle_events(self.move)
-
-            server_socket.sendall(pickle.dumps(self.move))
+            try:
+                server_socket.sendall(pickle.dumps(self.move))
+            except (ConnectionResetError, ConnectionAbortedError):
+                pass
 
             if self.move["quit"]:
                 server_socket.close()
                 pygame.quit()
+                sys.exit()
 
             try:
                 positions, obstacles_names, obstacles_xy = pickle.loads(server_socket.recv(BUFFER_SIZE))
@@ -94,4 +98,3 @@ class Map(Window):
 
             self.obstacles.print_obstacles(self.local_window)
             pygame.display.update()
-
