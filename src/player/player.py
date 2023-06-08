@@ -21,19 +21,29 @@ BOTTOM_MAP_EDGE = SCREEN_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 2
 TOP_MAP_EDGE = SCREEN_HEIGHT - SCREEN_FLOOR_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 3
 
 
+FRAMES_TO_ANIMATE = 30
+FRAMES_BOUNDARY_TO_START_ANIMATE = 8
+FRAMES_BOUNDARY_TO_STOP_ANIMATE = 22
+
 def create_player(x, y, picked_character):
     player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))
-    return Player(x, y, player_scaled_img, picked_character)
+    player_img_animation = pygame.image.load(f"src/player/assets/characters/{picked_character}/run/1.png")
+    player_scaled_img_animation = pygame.transform.scale(player_img_animation,
+                                                         (int(player_img_animation.get_width() * PLAYER_SCALE),
+                                                          int(player_img_animation.get_height() * PLAYER_SCALE)))
+    return Player(x, y, player_scaled_img, player_scaled_img_animation)
 
 
 class Player:
-    def __init__(self, x, y, skin, picked_character):
+    def __init__(self, x, y, skin, skin_animation):
         self.x = x
         self.y = y
+        self.pos = 1
         self.skin = skin
+        self.skin_animation = skin_animation
         self.rect = self.skin.get_rect()
         self.rect.center = (x, y)
         self.is_dead = False
@@ -71,9 +81,21 @@ class Player:
 
     def set_xy(self, xy):
         self.rect.center = (xy[X], xy[Y])
+        self.x = xy[X]
+        self.y = xy[Y]
+
+    def player_animation_controller(self, move, local_window):
+        frame = move % FRAMES_TO_ANIMATE
+        if frame < FRAMES_BOUNDARY_TO_START_ANIMATE or frame > FRAMES_BOUNDARY_TO_STOP_ANIMATE:
+            local_window.screen.blit(self.skin, self.rect)
+        elif FRAMES_BOUNDARY_TO_START_ANIMATE <= frame <= FRAMES_BOUNDARY_TO_STOP_ANIMATE:
+            local_window.screen.blit(self.skin_animation, self.rect)
+
 
     def print_player(self, local_window):
-        local_window.screen.blit(self.skin, self.rect)
+        self.player_animation_controller(self.pos, local_window)
+        self.pos += 1
+
 
     def handle_screen_edges(self, move):
         if self.rect.center[X] >= RIGHT_MAP_EDGE:

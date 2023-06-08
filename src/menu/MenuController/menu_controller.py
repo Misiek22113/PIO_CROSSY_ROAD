@@ -24,6 +24,15 @@ pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(0.01)
 
 
+def set_background_music(is_game):
+    if is_game:
+        pygame.mixer.music.load("src/menu/utils/game_song.mp3")
+    else:
+        pygame.mixer.music.load("src/menu/utils/menu_theme_song.mp3")
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.01)
+
+
 class MenuController:
 
     def __init__(self, server_ip, server_port):
@@ -74,11 +83,14 @@ class MenuController:
             elif actual == "champion_is_picked":
                 actual = self.champion_is_picked.handle_notification_loop()
             elif actual == "game":
+                set_background_music(True)
                 self.map = Map(SCREEN_WIDTH, SCREEN_HEIGHT, players)
                 actual, champion = self.map.handle_map_loop(server_socket)
             elif actual == "lost":
+                set_background_music(False)
                 actual = EndGameResult("lost", champion, LOST).handle_end_game_result_loop()
             elif actual == "win":
+                set_background_music(False)
                 actual = EndGameResult("win", champion, WIN).handle_end_game_result_loop()
 
     def connect_to_server(self):

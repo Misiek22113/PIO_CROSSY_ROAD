@@ -28,7 +28,6 @@ FIRST_PLAYER = 0
 SECOND_PLAYER = 1
 THIRD_PLAYER = 2
 
-
 class Map(Window):
     def __init__(self, width, height, player_skins):
         super().__init__("game", width, height)
