@@ -1,4 +1,7 @@
 import pygame
+from src.player.local_window_player_movement import SCREEN_WIDTH
+from src.player.local_window_player_movement import SCREEN_HEIGHT
+from src.player.local_window_player_movement import SCREEN_FLOOR_HEIGHT
 
 Y = 1
 X = 0
@@ -6,6 +9,10 @@ X = 0
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
 SCROLL_SPEED = 3
+
+PLAYER_WIDTH = 14
+PLAYER_HEIGHT = 20
+
 
 def create_player(x, y, picked_character):
     player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
@@ -27,6 +34,8 @@ class Player:
         if move["is_colliding_with_pushing"]:
             self.x -= SCROLL_SPEED
 
+        self.handle_screen_edges(move)
+
         if move["has_won"]:
             self.rect.center = (self.x, self.y)
             return
@@ -47,3 +56,14 @@ class Player:
 
     def print_player(self, local_window):
         local_window.screen.blit(self.skin, self.rect)
+
+    def handle_screen_edges(self, move):
+        if self.rect.center[X] >= SCREEN_WIDTH - (PLAYER_WIDTH * PLAYER_SCALE) / 2:
+            move["moving_right"] = False
+        elif self.rect.center[X] <= (PLAYER_WIDTH * PLAYER_SCALE) / 2:
+            move["moving_left"] = False
+
+        if self.rect.center[Y] >= SCREEN_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 2:
+            move["moving_down"] = False
+        elif self.rect.center[Y] <= SCREEN_HEIGHT - SCREEN_FLOOR_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 3:
+            move["moving_up"] = False
