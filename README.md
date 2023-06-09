@@ -26,3 +26,19 @@ pip install -r requirements.txt
 
 Na początku uruchamiamy server.py. Następnie możemy uruchomić client.py. Żeby gra została uruchomiona, potrzebne są 3 osoby w lobby, dlatego client musi być odpalony 3 razy.
 
+# 1 sposób - w terminalu
+Do uruchomienia każdego z programów potrzebujemy oddzielnie uruchomione terminale (1 dla serwera, 3 dla graczy).
+Upewniamy się, że terminal CMD ustawiony jest na folderze z grą. 
+Serwer uruchamiamy poprzez komendę "python server.py". Gracza uruchamimay przez komendę "python client.py".
+
+# 2 sposób - w pełni w Pycharmie
+
+- server.py
+server.py uruchamiamy jak normalny program w Pycharmie.
+
+- client.py
+W celu możliwości uruchomienia trzykrotnie client.py musimy wykonać następujące kroki:
+1. Wchodzimy w "Edit Configurations..." (znajduje się to w rozwijanej liście, kiedy klikniemy na nazwę programu, który chcemy uruchomić obok przycisków do uruchomienia czy debugowania.)
+2. Zaznaczamy opcję "Allow parallel run".
+3. Zatwierdzamy "Apply".
+4. Uruchamiamy 3 razy jak normalny program.
