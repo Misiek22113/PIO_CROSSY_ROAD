@@ -48,6 +48,7 @@ class Map(Window):
             "moving_down": False,
             "is_colliding_with_pushing": False,
             "is_colliding": False,
+            "has_died": False,
             "has_won": False
         }
         self.obstacles = EMPTY_OBSTACLES

@@ -9,6 +9,9 @@ obstacles_types = {  # if _ is first char in obstacle type name, then it's deadl
     "+finish_line": f"src/obstacles/assets/finish_line.png"
 }
 
+obstacles_keys = list(obstacles_types.keys())
+obstacles_keys_to_be_drawn = obstacles_keys[:-1]
+
 
 def create_obstacle(obstacle_type, x, y):
     img_src = obstacles_types.get(obstacle_type, obstacles_types["desk"])

@@ -19,18 +19,29 @@ def create_player(x, y, picked_character):
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))
-    return Player(x, y, player_scaled_img)
+    return Player(x, y, player_scaled_img, picked_character)
 
 
 class Player:
-    def __init__(self, x, y, skin):
+    def __init__(self, x, y, skin, picked_character):
         self.x = x
         self.y = y
         self.skin = skin
         self.rect = self.skin.get_rect()
         self.rect.center = (x, y)
+        self.is_dead = False
+        self.picked_character = picked_character
 
     def move(self, move):
+        if move["has_died"]:
+            self.is_dead = True
+
+        if self.is_dead:
+            move["moving_left"] = False
+            move["moving_right"] = False
+            move["moving_up"] = False
+            move["moving_down"] = False
+
         if move["is_colliding_with_pushing"]:
             self.x -= SCROLL_SPEED
 
