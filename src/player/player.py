@@ -15,6 +15,11 @@ PLAYER_HEIGHT = 20
 
 PLAYER_DEATH_LINE_X = -10
 
+LEFT_MAP_EDGE = (PLAYER_WIDTH * PLAYER_SCALE) / 2
+RIGHT_MAP_EDGE = SCREEN_WIDTH - (PLAYER_WIDTH * PLAYER_SCALE) / 2
+BOTTOM_MAP_EDGE = SCREEN_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 2
+TOP_MAP_EDGE = SCREEN_HEIGHT - SCREEN_FLOOR_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 3
+
 
 def create_player(x, y, picked_character):
     player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
@@ -71,14 +76,14 @@ class Player:
         local_window.screen.blit(self.skin, self.rect)
 
     def handle_screen_edges(self, move):
-        if self.rect.center[X] >= SCREEN_WIDTH - (PLAYER_WIDTH * PLAYER_SCALE) / 2:
+        if self.rect.center[X] >= RIGHT_MAP_EDGE:
             move["moving_right"] = False
-        elif self.rect.center[X] <= (PLAYER_WIDTH * PLAYER_SCALE) / 2:
+        elif self.rect.center[X] <= LEFT_MAP_EDGE:
             move["moving_left"] = False
 
-        if self.rect.center[Y] >= SCREEN_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 2:
+        if self.rect.center[Y] >= BOTTOM_MAP_EDGE:
             move["moving_down"] = False
-        elif self.rect.center[Y] <= SCREEN_HEIGHT - SCREEN_FLOOR_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 3:
+        elif self.rect.center[Y] <= TOP_MAP_EDGE:
             move["moving_up"] = False
 
         if self.rect.center[X] <= PLAYER_DEATH_LINE_X:
