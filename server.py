@@ -325,6 +325,9 @@ class Server:
             if self.players[client_number].rect.colliderect(obstacle.rect):
                 move["is_colliding"] = True
 
+                if obstacle.is_deadly:
+                    self.players[client_number].is_dead = True
+
                 if obstacle.rect.x > self.players[client_number].rect.x:
                     move["moving_right"] = False
                     move["is_colliding_with_pushing"] = True
@@ -342,6 +345,9 @@ class Server:
             else:
                 move["is_colliding"] = False
                 move["is_colliding_with_pushing"] = False
+
+            if self.players[client_number].is_dead:
+                move["has_died"] = True
 
         self.players[client_number].move(move)
         return obstacles_names, obstacles_positions
