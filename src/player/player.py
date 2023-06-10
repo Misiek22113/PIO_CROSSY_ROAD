@@ -13,6 +13,8 @@ SCROLL_SPEED = 3
 PLAYER_WIDTH = 14
 PLAYER_HEIGHT = 20
 
+PLAYER_DEATH_LINE_X = -10
+
 
 def create_player(x, y, picked_character):
     player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
@@ -78,3 +80,7 @@ class Player:
             move["moving_down"] = False
         elif self.rect.center[Y] <= SCREEN_HEIGHT - SCREEN_FLOOR_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 3:
             move["moving_up"] = False
+
+        if self.rect.center[X] <= PLAYER_DEATH_LINE_X:
+            self.is_dead = True
+            move["has_died"] = True
