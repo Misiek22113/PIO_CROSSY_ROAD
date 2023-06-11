@@ -67,7 +67,7 @@ CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
 START_GAME = 5
 
 OBSTACLE_GENERATE_DELAY = 1
-FINISH_LINE_GENERATE_DELAY = 5
+FINISH_LINE_GENERATE_DELAY = 20
 SECOND = 1
 COUNTING_START = 0
 WAIT_FOR_ANOTHER_CHECK = 1
@@ -294,8 +294,10 @@ class Server:
                 move["moving_left"] = True
                 move["moving_up"] = False
                 move["moving_down"] = False
-                move["is_colliding_with_pushing"] = False
+                move["is_colliding_with_pushing"] = True
                 move["is_colliding"] = False
+                move["is_dead"] = True
+                self.players[client_number].is_dead = True
                 while self.game_is_ended == GAME_IS_GOING and self.players_in_game > 0:
                     self.players[client_number].move(move)
                     self.test_obstacles.handle_obstacles()
@@ -382,9 +384,15 @@ class Server:
             self.game_is_started = GAME_IS_NOT_STARTED
             return QUIT
 
+        dead_players = 0
         player_positions = []
         for player in self.players:
-            player_positions.append([player.x, player.y])
+            player_positions.append([player.x, player.y, player.is_dead])
+            if player.is_dead:
+                dead_players += 1
+
+        if dead_players == MAX_PLAYERS:
+            self.game_is_ended = GAME_IS_ENDED
 
         try:
             self.client_sockets[client_number].send(
@@ -423,7 +431,5 @@ class Server:
                 self.server_status = SERVER_IS_CLOSING
                 sys.exit()
 
-
-# TODO delete later
 server = Server()
 server.start_server()

@@ -1,8 +1,8 @@
-# class with methods only to test obstacles, i.e. collisions, printing, moving etc.
-# TODO move logic behind this to server, when it will accept multiple players in game
 import random
 
-from src.obstacles.obstacle import create_obstacle, Obstacle, obstacles_keys_to_be_drawn
+import numpy as np
+
+from src.obstacles.obstacle import create_obstacle, obstacles_keys_to_be_drawn
 
 Y = 1
 X = 0
@@ -15,7 +15,7 @@ FINISH_LINE_Y_OFFSET = 532.91
 
 class TestObstacles:
     def __init__(self):
-        self.obstacles = []
+        self.obstacles = np.array([])
         self.names = []
 
     def add_obstacle(self, generate_finish_line=False):
@@ -31,11 +31,17 @@ class TestObstacles:
             obstacle = create_obstacle("+finish_line", x, y)
             self.names.append("+finish_line")
 
-        self.obstacles.append(obstacle)
+        self.obstacles = np.append(self.obstacles, np.array([obstacle]))
 
     def handle_obstacles(self):
-        for obst in self.obstacles:
-            obst.move_obstacle(-SCROLL_SPEED)
+        index = 0
+        while index < len(self.obstacles):
+            self.obstacles[index].move_obstacle(-SCROLL_SPEED)
+            if self.obstacles[index].x < -50:
+                self.obstacles = np.delete(self.obstacles, index)
+                del self.names[index]
+            else:
+                index += 1
 
     def update_obstacles(self, names, xy):
         self.obstacles = []

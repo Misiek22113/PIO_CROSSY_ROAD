@@ -4,11 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-<<<<<<< HEAD
-    <orderEntry type="jdk" jdkName="Python 3.10 (PTE)" jdkType="Python SDK" />
-=======
-    <orderEntry type="jdk" jdkName="Python 3.10" jdkType="Python SDK" />
->>>>>>> 94ffd35 (PTE-28: add music to game, add animation to movement)
+    <orderEntry type="jdk" jdkName="Python 3.10 (pte)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
