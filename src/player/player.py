@@ -34,11 +34,11 @@ def create_player(x, y, picked_character):
     player_scaled_img_animation = pygame.transform.scale(player_img_animation,
                                                          (int(player_img_animation.get_width() * PLAYER_SCALE),
                                                           int(player_img_animation.get_height() * PLAYER_SCALE)))
-    return Player(x, y, player_scaled_img, player_scaled_img_animation)
+    return Player(x, y, player_scaled_img, player_scaled_img_animation, picked_character)
 
 
 class Player:
-    def __init__(self, x, y, skin, skin_animation):
+    def __init__(self, x, y, skin, skin_animation, picked_character):
         self.x = x
         self.y = y
         self.pos = 1
@@ -47,6 +47,7 @@ class Player:
         self.rect = self.skin.get_rect()
         self.rect.center = (x, y)
         self.is_dead = False
+        self.picked_character = picked_character
 
     def move(self, move):
         if move["has_died"]:
@@ -78,10 +79,20 @@ class Player:
 
         self.rect.center = (self.x, self.y)
 
-    def set_xy(self, xy):
-        self.rect.center = (xy[X], xy[Y])
-        self.x = xy[X]
-        self.y = xy[Y]
+    def set_position_and_status(self, position_and_status):
+        self.rect.center = (position_and_status[X], position_and_status[Y])
+        self.x = position_and_status[X]
+        self.y = position_and_status[Y]
+
+        if position_and_status[2] and not self.is_dead:
+            self.set_dead_skin()
+
+    def set_dead_skin(self):
+        self.skin = pygame.image.load(f"src/player/assets/characters/{self.picked_character}/dead/0.png")
+        self.skin = pygame.transform.scale(self.skin,
+                                           (int(self.skin.get_width() * PLAYER_SCALE),
+                                            int(self.skin.get_height() * PLAYER_SCALE)))
+        self.skin_animation = self.skin
 
     def player_animation_controller(self, move, local_window):
         frame = move % FRAMES_TO_ANIMATE

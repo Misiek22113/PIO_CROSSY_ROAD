@@ -102,7 +102,7 @@ class Client:
                 self.server_socket.close()
                 continue
 
-            self.player.set_xy(positions)
+            self.player.set_position_and_status(positions)
             self.player.print_player(self.local_window)
             pygame.display.update()
 

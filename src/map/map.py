@@ -89,7 +89,7 @@ class Map(Window):
                     return "server_is_closed", None
 
             for client_number, position in enumerate(positions):
-                self.players[client_number].set_xy(position)
+                self.players[client_number].set_position_and_status(position)
 
             self.obstacles.update_obstacles(obstacles_names, obstacles_xy)
 
