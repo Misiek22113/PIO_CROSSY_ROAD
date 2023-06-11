@@ -26,7 +26,7 @@ FRAMES_BOUNDARY_TO_START_ANIMATE = 8
 FRAMES_BOUNDARY_TO_STOP_ANIMATE = 22
 
 def create_player(x, y, picked_character):
-    player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/idle/0.png")
+    player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/run/0.png")
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))
@@ -47,7 +47,6 @@ class Player:
         self.rect = self.skin.get_rect()
         self.rect.center = (x, y)
         self.is_dead = False
-        self.picked_character = picked_character
 
     def move(self, move):
         if move["has_died"]:
@@ -91,11 +90,11 @@ class Player:
         elif FRAMES_BOUNDARY_TO_START_ANIMATE <= frame <= FRAMES_BOUNDARY_TO_STOP_ANIMATE:
             local_window.screen.blit(self.skin_animation, self.rect)
 
-
     def print_player(self, local_window):
         self.player_animation_controller(self.pos, local_window)
         self.pos += 1
-
+        if self.pos == FRAMES_TO_ANIMATE:
+            self.pos = 0
 
     def handle_screen_edges(self, move):
         if self.rect.center[X] >= RIGHT_MAP_EDGE:
