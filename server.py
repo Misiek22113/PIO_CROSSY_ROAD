@@ -1,3 +1,4 @@
+import copy
 import pickle
 import socket
 import sys
@@ -10,6 +11,7 @@ from src.game_simulation.test_obstacles import TestObstacles
 from src.player.player import create_player
 
 # server consts
+no = 0
 QUIT = "q"
 
 SERVER_IS_CLOSING = True
@@ -72,6 +74,7 @@ SECOND = 1
 COUNTING_START = 0
 WAIT_FOR_ANOTHER_CHECK = 1
 FRAME_TIME = 1 / 60
+QUIT_PLAYER_MOVE_DELAY = 0.02
 
 GAME_IS_GOING = 0
 GAME_IS_NOT_STARTED = False
@@ -288,20 +291,7 @@ class Server:
                 move = {"quit": True}
 
             if move["quit"]:
-                self.players_in_game += CLIENT_QUIT
-                move["has_won"] = False
-                move["moving_right"] = False
-                move["moving_left"] = True
-                move["moving_up"] = False
-                move["moving_down"] = False
-                move["is_colliding_with_pushing"] = True
-                move["is_colliding"] = False
-                move["is_dead"] = True
-                self.players[client_number].is_dead = True
-                while self.game_is_ended == GAME_IS_GOING and self.players_in_game > 0:
-                    self.players[client_number].move(move)
-                    self.test_obstacles.handle_obstacles()
-                    time.sleep(0.01)
+                self.handle_quit_player_moving(client_number, move)
                 break
 
             obstacles_names, obstacles_positions = self.handle_move(move, client_number)
@@ -316,12 +306,28 @@ class Server:
 
             self.test_obstacles.handle_obstacles()
 
-    def handle_move(self, move, client_number):
-        obstacles_names = self.test_obstacles.names
-        obstacles_positions = []
+    def handle_quit_player_moving(self, client_number, move):
+        self.players_in_game += CLIENT_QUIT
+        move["has_won"] = False
+        move["moving_right"] = False
+        move["moving_left"] = True
+        move["moving_up"] = False
+        move["moving_down"] = False
+        move["is_colliding_with_pushing"] = True
+        move["is_colliding"] = False
+        move["is_dead"] = True
+        self.players[client_number].is_dead = True
+        while self.game_is_ended == GAME_IS_GOING and self.players_in_game > 0:
+            self.players[client_number].move(move)
+            self.test_obstacles.handle_obstacles()
+            time.sleep(QUIT_PLAYER_MOVE_DELAY)
 
+    def handle_move(self, move, client_number):
+        obstacles_positions = []
         for obstacle in self.test_obstacles.obstacles:
             obstacles_positions.append([obstacle.x, obstacle.y])
+
+        obstacles_names = self.test_obstacles.names
 
         for obstacle in self.test_obstacles.obstacles:
             if self.players[client_number].rect.colliderect(obstacle.rect):
@@ -350,6 +356,7 @@ class Server:
 
             if self.players[client_number].is_dead:
                 move["has_died"] = True
+                move["is_colliding_with_pushing"] = True
 
         self.players[client_number].move(move)
         return obstacles_names, obstacles_positions
@@ -384,14 +391,14 @@ class Server:
             self.game_is_started = GAME_IS_NOT_STARTED
             return QUIT
 
-        dead_players = 0
+        number_of_dead_players = 0
         player_positions = []
         for player in self.players:
             player_positions.append([player.x, player.y, player.is_dead])
             if player.is_dead:
-                dead_players += 1
+                number_of_dead_players += 1
 
-        if dead_players == MAX_PLAYERS:
+        if number_of_dead_players == MAX_PLAYERS and self.server_status != SERVER_IS_CLOSING:
             self.game_is_ended = GAME_IS_ENDED
 
         try:
@@ -404,7 +411,7 @@ class Server:
 
     def timed_generate_obstacles(self):
         while self.server_status == SERVER_IS_RUNNING:
-            self.test_obstacles.obstacles = []
+            self.test_obstacles.obstacles = np.array([])
             self.test_obstacles.names = []
             self.elapsed_total_time = COUNTING_START
             self.elapsed_time_from_last_obstacle_generation = COUNTING_START
@@ -430,6 +437,7 @@ class Server:
             if command == QUIT:
                 self.server_status = SERVER_IS_CLOSING
                 sys.exit()
+
 
 server = Server()
 server.start_server()
