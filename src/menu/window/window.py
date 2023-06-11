@@ -7,7 +7,7 @@ class Window:
     BACKGROUND_IMAGE = pygame.image.load("src/menu/menu_background.png")
     MENU_BUTTON = pygame.image.load("src/menu/button_menu.png")
     BACKGROUND_IMAGE_POS = (0, 0)
-    TEXT_COLOR = (228, 36, 48)
+    TEXT_COLOR = (251, 229, 32)
     BASE_COLOR = (249, 154, 40)
     HOVERING_COLOR = (230, 205, 87)
     FONT_HEADER = pygame.font.Font("src/menu/PressStart2P-Regular.ttf", 80)

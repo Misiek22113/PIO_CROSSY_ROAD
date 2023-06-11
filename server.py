@@ -69,7 +69,7 @@ CLIENT_DISCONNECT_IN_CHAMPION_SELECT = 15
 START_GAME = 5
 
 OBSTACLE_GENERATE_DELAY = 1
-FINISH_LINE_GENERATE_DELAY = 20
+FINISH_LINE_GENERATE_DELAY = 30
 SECOND = 1
 COUNTING_START = 0
 WAIT_FOR_ANOTHER_CHECK = 1
@@ -358,8 +358,28 @@ class Server:
                 move["has_died"] = True
                 move["is_colliding_with_pushing"] = True
 
+        self.handle_collisions_between_players(move, client_number)
+
         self.players[client_number].move(move)
         return obstacles_names, obstacles_positions
+
+    def handle_collisions_between_players(self, move, client_number):
+        for player in self.players:
+            if player == self.players[client_number]:
+                continue
+            if self.players[client_number].rect.colliderect(player.rect):
+                move["is_colliding"] = True
+                if player.rect.x > self.players[client_number].rect.x:
+                    move["moving_right"] = False
+                elif player.rect.x < self.players[client_number].rect.x:
+                    move["moving_left"] = False
+
+                if player.rect.y < self.players[client_number].rect.y:
+                    move["moving_up"] = False
+                elif player.rect.y > self.players[client_number].rect.y:
+                    move["moving_down"] = False
+
+
 
     def handle_end_game(self, move, client_number):
         if self.game_is_ended == GAME_IS_ENDED:

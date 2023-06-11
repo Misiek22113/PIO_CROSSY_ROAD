@@ -47,7 +47,7 @@ class Lobby(Window):
         img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
         img_rect = img.get_rect(center=(x, y))
         self.screen.blit(img, img_rect)
-        self.draw_text(self.CHAMPIONS[champion_index][1], x, 500, self.FONT_OPTION, self.TEXT_COLOR)
+        self.draw_text(self.CHAMPIONS[champion_index][1].replace("_", " "), x, 500, self.FONT_OPTION, self.TEXT_COLOR)
 
     def handle_lobby_loop(self, socket):
         while True:

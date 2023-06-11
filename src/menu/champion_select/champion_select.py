@@ -42,7 +42,7 @@ class ChampionSelect(Window):
     def print_champion_select_menu(self):
         self.screen.blit(self.BACKGROUND_IMAGE, self.BACKGROUND_IMAGE_POS)
         self.draw_text("Choose your Champion", 640, 100, self.FONT_CHAMPION_SELECT, self.TEXT_COLOR)
-        self.draw_text(self.CHAMPIONS[self.champion_index][1], 640, 500, self.FONT_CHAMPION_SELECT, self.TEXT_COLOR)
+        self.draw_text(self.CHAMPIONS[self.champion_index][1].replace("_", " "), 640, 500, self.FONT_CHAMPION_SELECT, self.TEXT_COLOR)
         self.BACK_BUTTON = Button(image=self.MENU_BUTTON, pos=(440, 650), text_input="BACK", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
         self.NEXT_BUTTON = Button(image=self.MENU_BUTTON, pos=(840, 650), text_input="NEXT", font=self.FONT_OPTION,

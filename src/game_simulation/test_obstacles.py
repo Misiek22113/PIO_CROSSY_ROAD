@@ -11,6 +11,8 @@ X_POSITION_TO_DELETE_OBSTACLE = -50
 Y = 1
 X = 0
 
+GENERATION_OBSTACLE_X = 1400
+
 OBSTACLE_Y_GENERATION_LOWER_BOUND = 250
 OBSTACLE_Y_GENERATION_UPPER_BOUND = 700
 SCROLL_SPEED = 1
@@ -23,16 +25,23 @@ class TestObstacles:
         self.names = []
 
     def add_obstacle(self, generate_finish_line=False):
-        x = 1400
 
         if not generate_finish_line:
             y = random.randint(OBSTACLE_Y_GENERATION_LOWER_BOUND, OBSTACLE_Y_GENERATION_UPPER_BOUND)
-            drawn_obstacle_type = random.choice(obstacles_keys_to_be_drawn)
-            obstacle = create_obstacle(drawn_obstacle_type, x, y)
+
+            if y%2 == 0:
+                GENERATION_OBSTACLE_Y = random.randint(OBSTACLE_Y_GENERATION_LOWER_BOUND, y)
+            else:
+                GENERATION_OBSTACLE_Y = random.randint(y, OBSTACLE_Y_GENERATION_UPPER_BOUND)
+
+            random_number = random.randint(0, 1000)
+
+            drawn_obstacle_type = obstacles_keys_to_be_drawn[random_number % len(obstacles_keys_to_be_drawn)]
+            obstacle = create_obstacle(drawn_obstacle_type, GENERATION_OBSTACLE_X, GENERATION_OBSTACLE_Y)
             self.names.append(drawn_obstacle_type)
         else:
             y = FINISH_LINE_Y_OFFSET
-            obstacle = create_obstacle("+finish_line", x, y)
+            obstacle = create_obstacle("+finish_line", GENERATION_OBSTACLE_X, y)
             self.names.append("+finish_line")
 
         self.obstacles = np.append(self.obstacles, np.array([obstacle]))

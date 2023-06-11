@@ -1,11 +1,13 @@
 import pygame
 
-OBSTACLE_SCALE = 5
+OBSTACLE_TYPE_A_SCALE = 5
+OBSTACLE_TYPE_B_SCALE = 3
 
 obstacles_types = {  # if _ is first char in obstacle type name, then it's deadly, if it's +, then that's finish line
     "desk": f"src/obstacles/assets/desk.png",
     "_integral": f"src/obstacles/assets/integral.png",
-
+    "_Dante": f"src/obstacles/assets/Dante.png",
+    "C": f"src/obstacles/assets/C.png",
     "+finish_line": f"src/obstacles/assets/finish_line.png"
 }
 
@@ -13,14 +15,20 @@ obstacles_keys = list(obstacles_types.keys())
 obstacles_keys_to_be_drawn = obstacles_keys[:-1]
 
 
+def get_obstacle_type(obstacle_type):
+    if obstacle_type == "desk":
+        return OBSTACLE_TYPE_A_SCALE
+    else:
+        return OBSTACLE_TYPE_B_SCALE
+
 def create_obstacle(obstacle_type, x, y):
     img_src = obstacles_types.get(obstacle_type, obstacles_types["desk"])
     img = pygame.image.load(img_src)
 
     if obstacle_type != "+finish_line":
         scaled_img = pygame.transform.scale(img,
-                                            (int(img.get_width() * OBSTACLE_SCALE),
-                                             int(img.get_height() * OBSTACLE_SCALE)))
+                                            (int(img.get_width() * get_obstacle_type(obstacle_type)),
+                                             int(img.get_height() * get_obstacle_type(obstacle_type))))
     else:
         scaled_img = img
 
