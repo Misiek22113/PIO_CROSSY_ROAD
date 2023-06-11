@@ -3,8 +3,12 @@ from src.player.local_window_player_movement import SCREEN_WIDTH
 from src.player.local_window_player_movement import SCREEN_HEIGHT
 from src.player.local_window_player_movement import SCREEN_FLOOR_HEIGHT
 
-Y = 1
+
+PATH_TO_PLAYERS_ASSETS = "src/player/assets/characters"
+
 X = 0
+Y = 1
+IS_DEAD = 2
 
 PLAYER_SPEED = 10
 PLAYER_SCALE = 5
@@ -20,17 +24,21 @@ RIGHT_MAP_EDGE = SCREEN_WIDTH - (PLAYER_WIDTH * PLAYER_SCALE) / 2
 BOTTOM_MAP_EDGE = SCREEN_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 2
 TOP_MAP_EDGE = SCREEN_HEIGHT - SCREEN_FLOOR_HEIGHT - (PLAYER_HEIGHT * PLAYER_SCALE) / 3
 
-
 FRAMES_TO_ANIMATE = 30
 FRAMES_BOUNDARY_TO_START_ANIMATE = 8
 FRAMES_BOUNDARY_TO_STOP_ANIMATE = 22
 
+INIT_FRAME = 1
+AFTER_ANIMATE = 0
+NEXT_FRAME = 1
+
+
 def create_player(x, y, picked_character):
-    player_img = pygame.image.load(f"src/player/assets/characters/{picked_character}/run/0.png")
+    player_img = pygame.image.load(f"{PATH_TO_PLAYERS_ASSETS}/{picked_character}/run/0.png")
     player_scaled_img = pygame.transform.scale(player_img,
                                                (int(player_img.get_width() * PLAYER_SCALE),
                                                 int(player_img.get_height() * PLAYER_SCALE)))
-    player_img_animation = pygame.image.load(f"src/player/assets/characters/{picked_character}/run/1.png")
+    player_img_animation = pygame.image.load(f"{PATH_TO_PLAYERS_ASSETS}/{picked_character}/run/1.png")
     player_scaled_img_animation = pygame.transform.scale(player_img_animation,
                                                          (int(player_img_animation.get_width() * PLAYER_SCALE),
                                                           int(player_img_animation.get_height() * PLAYER_SCALE)))
@@ -41,7 +49,7 @@ class Player:
     def __init__(self, x, y, skin, skin_animation, picked_character):
         self.x = x
         self.y = y
-        self.pos = 1
+        self.frame = INIT_FRAME
         self.skin = skin
         self.skin_animation = skin_animation
         self.rect = self.skin.get_rect()
@@ -84,11 +92,11 @@ class Player:
         self.x = position_and_status[X]
         self.y = position_and_status[Y]
 
-        if position_and_status[2] and not self.is_dead:
+        if position_and_status[IS_DEAD] and not self.is_dead:
             self.set_dead_skin()
 
     def set_dead_skin(self):
-        self.skin = pygame.image.load(f"src/player/assets/characters/{self.picked_character}/dead/0.png")
+        self.skin = pygame.image.load(f"{PATH_TO_PLAYERS_ASSETS}/{self.picked_character}/dead/0.png")
         self.skin = pygame.transform.scale(self.skin,
                                            (int(self.skin.get_width() * PLAYER_SCALE),
                                             int(self.skin.get_height() * PLAYER_SCALE)))
@@ -102,10 +110,10 @@ class Player:
             local_window.screen.blit(self.skin_animation, self.rect)
 
     def print_player(self, local_window):
-        self.player_animation_controller(self.pos, local_window)
-        self.pos += 1
-        if self.pos == FRAMES_TO_ANIMATE:
-            self.pos = 0
+        self.player_animation_controller(self.frame, local_window)
+        self.frame += NEXT_FRAME
+        if self.frame == FRAMES_TO_ANIMATE:
+            self.frame = AFTER_ANIMATE
 
     def handle_screen_edges(self, move):
         if self.rect.center[X] >= RIGHT_MAP_EDGE:

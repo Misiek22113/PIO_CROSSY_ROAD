@@ -4,6 +4,10 @@ import numpy as np
 
 from src.obstacles.obstacle import create_obstacle, obstacles_keys_to_be_drawn
 
+FIRST_OBSTACLE = 0
+NEXT_OBSTACLE = 1
+X_POSITION_TO_DELETE_OBSTACLE = -50
+
 Y = 1
 X = 0
 
@@ -34,14 +38,14 @@ class TestObstacles:
         self.obstacles = np.append(self.obstacles, np.array([obstacle]))
 
     def handle_obstacles(self):
-        index = 0
+        index = FIRST_OBSTACLE
         while index < len(self.obstacles):
             self.obstacles[index].move_obstacle(-SCROLL_SPEED)
-            if self.obstacles[index].x < -50:
+            if self.obstacles[index].x < X_POSITION_TO_DELETE_OBSTACLE:
                 self.obstacles = np.delete(self.obstacles, index)
                 del self.names[index]
             else:
-                index += 1
+                index += NEXT_OBSTACLE
 
     def update_obstacles(self, names, xy):
         self.obstacles = []

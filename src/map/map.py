@@ -2,6 +2,7 @@ import pickle
 import sys
 
 import pygame
+import numpy as np
 
 from src.game_simulation.test_obstacles import TestObstacles
 from src.player.player import create_player
@@ -28,15 +29,16 @@ FIRST_PLAYER = 0
 SECOND_PLAYER = 1
 THIRD_PLAYER = 2
 
+
 class Map(Window):
     def __init__(self, width, height, player_skins):
         super().__init__("game", width, height)
         self.background_img = pygame.image.load("src/map/assets/background.png").convert()
         self.background_width = self.background_img.get_width()
         self.tiles = math.ceil(self.background_width / SCREEN_WIDTH) + 1
-        self.players = [create_player(*FIRST_PLAYER_POSITION, player_skins[FIRST_PLAYER]),
-                        create_player(*SECOND_PLAYER_POSITION, player_skins[SECOND_PLAYER]),
-                        create_player(*THIRD_PLAYER_POSITION, player_skins[THIRD_PLAYER])]
+        self.players = np.array([create_player(*FIRST_PLAYER_POSITION, player_skins[FIRST_PLAYER]),
+                                 create_player(*SECOND_PLAYER_POSITION, player_skins[SECOND_PLAYER]),
+                                 create_player(*THIRD_PLAYER_POSITION, player_skins[THIRD_PLAYER])])
         self.scroll = INIT_SCROLL
         self.local_window = LocalWindowPlayerMovement(SCREEN_WIDTH, SCREEN_HEIGHT, self.screen)
         self.move = {
@@ -54,7 +56,7 @@ class Map(Window):
 
     def draw_scrolling_background(self):
         self.scroll -= SCROLL_SPEED
-        for i in range(0, self.tiles):
+        for i in range(self.tiles):
             self.screen.blit(self.background_img, (i * self.background_width + self.scroll, 0))
         if abs(self.scroll) > self.background_width:
             self.scroll = 0
@@ -88,10 +90,10 @@ class Map(Window):
                 else:
                     return "server_is_closed", None
 
-            for client_number, position in enumerate(positions):
-                self.players[client_number].set_position_and_status(position)
+            for client_number, position in enumerate(np.array(positions)):
+                self.players[client_number].set_position_and_status(np.array(position))
 
-            self.obstacles.update_obstacles(obstacles_names, obstacles_xy)
+            self.obstacles.update_obstacles(np.array(obstacles_names), np.array(obstacles_xy))
 
             for player in self.players:
                 player.print_player(self.local_window)
