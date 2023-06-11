@@ -30,7 +30,7 @@ class EndGameResult(Window):
         img = pygame.transform.scale(img, (img.get_width() * scale, img.get_height() * scale))
         img_rect = img.get_rect(center=(x, y))
         self.screen.blit(img, img_rect)
-        self.draw_text(self.CHAMPIONS[self.champion_index][1], x, 500, self.FONT_OPTION, self.TEXT_COLOR)
+        self.draw_text(self.CHAMPIONS[self.champion_index][1].replace("_", " "), x, 500, self.FONT_OPTION, self.TEXT_COLOR)
 
     def handle_end_game_result_loop(self):
         while True:

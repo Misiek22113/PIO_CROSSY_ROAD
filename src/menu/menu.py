@@ -16,10 +16,15 @@ class Menu(Window):
         self.CONTROLS_BUTTON = EMPTY_BUTTON
         self.EXIT_BUTTON = EMPTY_BUTTON
         self.MENU_MOUSE_POS = EMPTY_BUTTON
+        self.LOGO = pygame.image.load("src/menu/menu_logo2.png")
 
     def print_window_menu(self):
         self.screen.blit(self.BACKGROUND_IMAGE, self.BACKGROUND_IMAGE_POS)
-        self.draw_text("PASS THE EXAM", 640, 100, self.FONT_HEADER, self.TEXT_COLOR)
+        scale = 1.55
+        img = self.LOGO
+        img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+        img_rect = img.get_rect(center=(640, 140))
+        self.screen.blit(img, img_rect)
         self.PLAY_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 350), text_input="PLAY", font=self.FONT_OPTION,
                                   base_color=self.BASE_COLOR, hovering_color=self.HOVERING_COLOR)
         self.CONTROLS_BUTTON = Button(image=self.MENU_BUTTON, pos=(640, 500), text_input="CONTROLS",
