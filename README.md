@@ -26,6 +26,8 @@ pip install -r requirements.txt
 
 Na początku uruchamiamy server.py. Następnie możemy uruchomić client.py. Żeby gra została uruchomiona, potrzebne są 3 osoby w lobby, dlatego client musi być odpalony 3 razy.
 
+Uwaga! W server i client trzeba zmienić IP na to, na które chcemy się podłączyć. Są to zmienne HOST_IP.
+
 # 1 sposób - w terminalu
 Do uruchomienia każdego z programów potrzebujemy oddzielnie uruchomione terminale (1 dla serwera, 3 dla graczy).
 Upewniamy się, że terminal CMD ustawiony jest na folderze z grą. 
