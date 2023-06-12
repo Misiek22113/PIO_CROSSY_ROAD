@@ -103,7 +103,7 @@ class MenuController:
             if connection_message == SERVER_IS_FULL:
                 server_socket.close()
                 return "server_is_full"
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, TimeoutError):
             return "server_offline_notification"
         except ConnectionResetError:
             server_socket.close()
